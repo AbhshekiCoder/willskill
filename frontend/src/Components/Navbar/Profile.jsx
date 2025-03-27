@@ -25,7 +25,7 @@ function Profile(){
 						{/* sections 2 */}
 						<div className='group flex border-b border-gray-400 items-center pl-4 hover:text-purple-600 hover:bg-gray-300' style={{height:'45px'}}>
 		    	    	    <div>
-		    	    		  	<a className='hover:no-underline group-hover:text-purple-600' href="">My Bookmarks</a>
+		    	    		  	<Link to = "/StudentDashboard" className='hover:no-underline group-hover:text-purple-600' href="">My Bookmarks</Link>
 		    	    	  	</div>
 		    	    	</div>
 						{/* section 3 */}
@@ -37,7 +37,7 @@ function Profile(){
 						{/* section 4 */}
 						<div className='group flex border-b border-gray-400   items-center pl-4  hover:bg-gray-300' style={{height:'45px'}}>
 		    	    	    <div>
-		    	    		  	<a className='hover:no-underline group-hover:text-purple-600' href="">Safety Tips</a>
+		    	    		  	<Link to = "/quiz" className='hover:no-underline group-hover:text-purple-600' href="">Quiz</Link>
 		    	    	  	</div>
 		    	    	</div>
 						{/* section 5 */}
@@ -54,7 +54,7 @@ function Profile(){
 		    	    	</div>
 						<div className='group flex items-center pl-4  hover:bg-gray-300' style={{height:'45px'}}>
 		    	    	    <div>
-		    	    		  	<Link to = "/signin" className='hover:no-underline group-hover:text-purple-600' href="">Admin</Link>
+		    	    		  	<Link to = "/register" className='hover:no-underline group-hover:text-purple-600' href="">Admin</Link>
 		    	    	  	</div>
 		    	    	</div>
 

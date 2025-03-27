@@ -1,10 +1,14 @@
-const express = require('express');
+import express  from 'express'
+import   bodyParser from 'body-parser';
+const app = express();
+import dotenv from 'dotenv';
+
+dotenv.config()
+
+ import  { MongoClient} from 'mongodb';
+ import jwt from 'jsonwebtoken';
 
 
-const razorpay = require('razorpay')
-const jwt = require('jsonwebtoken');
-const dotenv = require('dotenv');
-const {MongoClient} = require('mongodb')
 
 dotenv.config()
 let url = process.env.URL
@@ -12,7 +16,7 @@ let url = process.env.URL
 let enroll = express.Router();
  
 
-enroll.post('/enroll', async(req, res) =>{
+enroll.post('/enroll',     async(req, res) =>{
     let {user, course_id} = req.body;
     console.log(user)
     let email = jwt.decode(user);
@@ -32,4 +36,4 @@ enroll.post('/enroll', async(req, res) =>{
 
 })
 
-module.exports = enroll;
+ export default enroll;

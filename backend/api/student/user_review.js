@@ -1,19 +1,21 @@
-const express = require('express')
-const  bodyParser = require('body-parser');
+import express  from 'express'
+import   bodyParser from 'body-parser';
 const app = express();
-const dotenv = require('dotenv');
+import dotenv from 'dotenv';
 
 dotenv.config()
 const url = process.env.URL
-const { MongoClient} = require('mongodb');
-var fs = require('fs');
-const path = require('path')
-const user_review = require('../../model/StudentModal/user_review')
+ import  { MongoClient} from 'mongodb';
+
+
+import fs from 'fs';
+import path from 'path';
+
 
 app.use(bodyParser.json());
 app.use(express.json());
 const router = express.Router();
-const multer = require('multer');
+import multer from 'multer';
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) =>{
@@ -52,4 +54,5 @@ router.post('/user_review', upload.single('file'), async(req, res) =>{
         console.log(err.message);
     }
 })
-module.exports = router;
+
+export default router;

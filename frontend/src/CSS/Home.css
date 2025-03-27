@@ -55,7 +55,41 @@
 .review-Img{
     width: 55px;
 }
+.wrapper {
+    background-color: white;
+    height: 120px;
+    overflow: hidden;
+    position: relative;
+    width: 80%;
+    display: flex;
+    align-items: center;
+  }
+  
+  /* Scrolling Track */
+  .track {
+    display: flex;
+    width: calc(200px * 14); /* Ensure it's wide enough for smooth looping */
+    animation: scroll 10s linear infinite;
+  }
+  
+  /* Individual Logo */
+  .logo {
+    width: 200px;
+    padding: 0 10px;
+  }
+  
+  .logo img {
+    width: 130px;
+    height: 90px;
+  }
+    @keyframes scroll {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(calc(-200px * 7)); 
+  }
+}
 
 
 
-/* Media Query for Screens Below 1060px */

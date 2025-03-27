@@ -32,6 +32,7 @@ import TeacherDashboard from './Pages/TeacherDashboard'
 import Admin from './Pages/Admin'
 import { useDispatch } from 'react-redux'
 import { userinfo } from './features/userinfo'
+import Video from './Pages/Video'
 
 let url = import.meta.env.VITE_URL
 
@@ -145,8 +146,10 @@ for (const key in object) {
       <Route path='/StudentDashboard' element ={<StudentDashboard/>}></Route>
       <Route path='/quiz' element ={<Quiz/>}></Route>
       <Route path='/courses' element ={<Courses sidebar_open={sidebar_open} profile={profile} logout={logout}/>}></Route> 
-      <Route path= '/Admin' element={<Register/>}></Route>
+      <Route path= '/register' element={<Register/>}></Route>
       <Route path = '/teachers' element = {<TeacherDashboard/>}></Route>
+      <Route path= '/Video' element= {<Video/>}></Route>
+      
    
    
      </Route>

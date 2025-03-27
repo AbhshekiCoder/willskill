@@ -62,6 +62,9 @@ function Home({sidebar_open, profile, logout}){
           {/* Main Container */}
         
          <Course_details/>
+
+       
+
         
          
         </>

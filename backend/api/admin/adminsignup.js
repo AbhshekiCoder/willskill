@@ -1,13 +1,13 @@
-const express = require('express')
-const  bodyParser = require('body-parser');
+import express from 'express'
+import bodyParser from 'body-parser' 
 const app = express();
-const dotenv = require('dotenv');
+import dotenv from 'dotenv'
 
 dotenv.config()
 const url = process.env.URL
-const { MongoClient} = require('mongodb');
-const admin = require('../../model/AdminModal/AdminSignup.js');
-const bcrypt = require('bcrypt');
+import { MongoClient } from 'mongodb';
+
+import bcrypt from 'bcrypt'
 
 app.use(bodyParser.json());
 app.use(express.json());
@@ -95,4 +95,4 @@ router.post('/adminsignup', async(req, res) =>{
 })
 
 
-module.exports = router;
+export default router;

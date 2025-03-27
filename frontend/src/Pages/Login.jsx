@@ -77,7 +77,7 @@ export default function Login() {
 			else{
 				setType("success");
 				console.log(result.data.user)
-				dispatch(userinfo(result.data.user.split(' ')[0]))
+				dispatch(userinfo(result.data.user.name.split(' ')[0]))
 				
 			
 			document.querySelector('.message').style.display = 'block';
@@ -143,6 +143,8 @@ let result = await axios.post(`${url}register_apps/register_apps`, obj);
 			}
 			else{
 				setType("success");
+				dispatch(userinfo(result.res.displayName.split(' ')[0]))
+				
 			
 			document.querySelector('.message').style.display = 'block';
 			document.getElementById("message").innerText = result.data.message;
@@ -254,7 +256,7 @@ let result = await axios.post(`${url}register_apps/register_apps`, obj);
 					
 
                     <div className='w-full h-10 flex justify-center items-center text-purple-800' >
-                        <p className='font-semibold text-lg' ><u>Login with your organisation</u></p>
+                        <p className='font-semibold text-lg' ><Link to = "/register">Login with your organization</Link></p>
                     </div>
 				</div>
 

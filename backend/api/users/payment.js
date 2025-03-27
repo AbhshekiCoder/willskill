@@ -1,13 +1,20 @@
-const express = require('express');
-
-
-const Razorpay =  require('razorpay')
-const jwt = require('jsonwebtoken');
-const dotenv = require('dotenv');
-const {MongoClient} = require('mongodb')
-const axios = require('axios');
+import express  from 'express'
+import   bodyParser from 'body-parser';
+const app = express();
+import dotenv from 'dotenv';
 
 dotenv.config()
+
+ import  { MongoClient} from 'mongodb';
+ import jwt from 'jsonwebtoken';
+
+
+import Razorpay  from 'razorpay'
+
+
+
+
+
 let url = process.env.URL
 
 let payment = express.Router();
@@ -43,8 +50,12 @@ payment.post('/payment', async(req, res) =>{
            user: email.email
           }
           let result =  collection.insertOne(obj);
-          res.send(order);
+          console.log(result)
+          res.send({success: true, message: "successfully registered", amount: price});
 
+   }
+   else{
+    res.send({success: false, message: "something went wrong"})
    }
     } catch (error) {
       console.error("Error creating order", error);
@@ -55,4 +66,4 @@ payment.post('/payment', async(req, res) =>{
    
     
 
-module.exports = payment;
+ export default payment

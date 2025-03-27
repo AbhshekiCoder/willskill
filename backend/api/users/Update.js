@@ -1,12 +1,14 @@
-const express = require('express')
-const  bodyParser = require('body-parser');
+import express  from 'express'
+import   bodyParser from 'body-parser';
 const app = express();
-const dotenv = require('dotenv');
+import dotenv from 'dotenv';
 
 dotenv.config()
 const url = process.env.URL
-const { MongoClient} = require('mongodb');
-const register = require('../../model/usermodal/Register');
+ import  { MongoClient} from 'mongodb';
+ import jwt from 'jsonwebtoken';
+
+
 app.use(bodyParser.json());
 app.use(express.json());
 const router = express.Router();
@@ -30,4 +32,4 @@ router.put('/user_profile_update', (req, res)=>{
    
 })
 
-module.exports = router;
+export default router;

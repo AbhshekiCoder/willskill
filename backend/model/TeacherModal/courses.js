@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from "mongoose";
 
 const courses_scehema = new mongoose.Schema({
     title:{
@@ -21,9 +21,18 @@ const courses_scehema = new mongoose.Schema({
     },
     type:{
         type: String
+    },
+    image:{
+        type: String
+    },
+    start_Date:{
+        
+    },
+    end_Date:{
+       
     }
    
 })
 
 const courses = mongoose.model('courses', courses_scehema);
-module.exports = courses;
+export default courses;

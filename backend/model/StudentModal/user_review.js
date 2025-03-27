@@ -1,4 +1,4 @@
-let mongoose = require('mongoose');
+import mongoose from "mongoose";
 
 let user_review_schema = new mongoose.Schema({
     name: {
@@ -19,4 +19,4 @@ let user_review_schema = new mongoose.Schema({
 
 const user_review =  mongoose.model('user_review', user_review_schema);
 
-module.exports = user_review;
+export default user_review;

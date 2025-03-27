@@ -1,12 +1,12 @@
-const express = require('express')
-const  bodyParser = require('body-parser');
+import express from 'express'
+import  bodyParser from 'body-parser';
 const app = express();
-const dotenv = require('dotenv');
+import dotenv from 'dotenv';
 
 dotenv.config()
 const url = process.env.URL
-const { MongoClient, ObjectId} = require('mongodb');
-const jwt = require('jsonwebtoken');
+ import  { MongoClient, ObjectId} from 'mongodb';
+import jwt from 'jsonwebtoken';
 
 
 
@@ -38,4 +38,4 @@ course_detail.get('/course_detail/:id', (req, res) =>{
     }
 });
 
-module.exports = course_detail;
+export default course_detail;

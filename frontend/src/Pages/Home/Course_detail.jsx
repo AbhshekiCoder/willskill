@@ -6,6 +6,13 @@ import React, { useState } from 'react'
 import CoursesNavbar from './Course_Detail/CoursesNavbar'
 import Review from './Course_Detail/Review'
 import Contact from './Course_Detail/Contact'
+import react from '../../assets/react.jpg'
+import java from '../../assets/java.jpg'
+import js from '../../assets/js.jpg'
+import web from '../../assets/web.jpg'
+import html from '../../assets/html.jpg'
+import css from '../../assets/css.jpg'
+
 export default function Course_detail() {
    
     
@@ -45,6 +52,26 @@ export default function Course_detail() {
         <div className='max-w-full'>
             {/* Cards */}
         </div>
+          <div className="wrapper m-auto">
+                <div class="track">
+             
+                    <div class="logo " ><img src={html} alt="HTML" /></div>
+                    <div class="logo"><img src={css} alt="CSS" /></div>
+                    <div class="logo"><img src={js} alt="JavaScript" /></div>
+                    <div class="logo"><img src={react} alt="React" /></div>
+                    <div class="logo"><img src={java} alt="Java" /></div>
+                    <div class="logo"><img src={web} alt="Web Dev" /></div>
+                    <div class="logo"><img src={js} alt="JavaScript" /></div>
+                   
+                    <div class="logo"><img src={html} alt="HTML" /></div>
+                    <div class="logo"><img src={css} alt="CSS" /></div>
+                    <div class="logo"><img src={js} alt="JavaScript" /></div>
+                    <div class="logo"><img src={react} alt="React" /></div>
+                    <div class="logo"><img src={java} alt="Java" /></div>
+                    <div class="logo"><img src={web} alt="Web Dev" /></div>
+                    <div class="logo"><img src={js} alt="JavaScript" /></div>
+                </div>
+                 </div>
 
         {/* Review */}
       <Review/>

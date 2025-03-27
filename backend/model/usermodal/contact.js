@@ -1,4 +1,4 @@
-let mongoose = require('mongoose');
+import mongoose from "mongoose";
 
 let contact_schema = new mongoose.Schema({
     name:{
@@ -14,4 +14,4 @@ let contact_schema = new mongoose.Schema({
 
 let customer_contact = mongoose.model('customer_contact', contact_schema);
 
-module.exports = customer_contact;
+export default customer_contact;

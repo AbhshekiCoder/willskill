@@ -1,12 +1,17 @@
-const express = require('express')
-const  bodyParser = require('body-parser');
+import express  from 'express'
+import   bodyParser from 'body-parser';
 const app = express();
-const dotenv = require('dotenv');
+import dotenv from 'dotenv';
 
 dotenv.config()
 const url = process.env.URL
-const { MongoClient} = require('mongodb');
-const customer_contact = require('../../model/usermodal/contact');
+ import  { MongoClient} from 'mongodb';
+ import jwt from 'jsonwebtoken';
+
+
+
+
+import customer_contact from '../../model/usermodal/contact.js';
 app.use(bodyParser.json());
 app.use(express.json());
 const router = express.Router();
@@ -34,4 +39,4 @@ router.post('/customer_contact', async(req, res) =>{
     }
 })
 
-module.exports = router;
+export default router

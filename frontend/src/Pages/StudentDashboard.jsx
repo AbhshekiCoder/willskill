@@ -11,7 +11,7 @@ export default function StudentDashboard() {
   const [courses, setCourses] = useState();
   const [login, setLogin] = useState(false);
   let data = async()=>{
-    let token = localStorage.getItem('users')
+    let token = localStorage.getItem('token')
    
     if(token){
       setLogin(true)
@@ -34,13 +34,19 @@ export default function StudentDashboard() {
     localStorage.removeItem("users");
     Navigate('/signin')
   }
+  function syllabus(id){
+    localStorage.setItem("topic_id", id);
+    Navigate('/Video');
+
+
+}
   return (
     <> 
     <div className='main-container mb-6'>
    
    <nav className='flex justify-between items-center sticky-top bg-gray-100 h-16 ' style={{ boxShadow: 'rgba(99, 99, 99, 0.2) 0px 2px 8px 0px'}}>
     <div className='logo ml-3'>
-    <Link to='/'>Tech Temple</Link>
+    <Link to='/'>Will Skill</Link>
 
     </div>
     <div>
@@ -58,11 +64,11 @@ export default function StudentDashboard() {
         </tr>
         {courses?courses.map(Element =>(
           <tr className='font-bold h-16 border-b max-sm:h-fit max-sm:block'>
-            <td className='max-sm:block p-3 max-sm:mt-3 bg-gray-200 '>{Element.title}</td>
+            <td className='max-sm:block p-3 max-sm:mt-3 bg-gray-200 '>{Element.name}</td>
             <td className='max-sm:block p-3 max-sm:mt-3  bg-gray-200'>{Element.start_date}</td>
             <td className='max-sm:block p-3 max-sm:mt-3  bg-gray-200'>{Element.end_date}</td>
             <td className='max-sm:block p-3 max-sm:mt-3  bg-gray-200'>{Element.price}</td>
-            <td className='max-sm:block p-3 max-sm:mt-3  bg-gray-200'><button className='w-full h-full p-2 bg-purple-400 text-white rounded-md' id={Element.course_id}>Go to Training</button></td>
+            <td className='max-sm:block p-3 max-sm:mt-3  bg-gray-200'><button className='w-full h-full p-2 bg-purple-400 text-white rounded-md' id={Element.course_id} onClick={()=>syllabus(Element.course_id)}>Go to Training</button></td>
         </tr>
 
         )): <div className='loading  text-2xl w-full h-full z-10 opacity-50 flex justify-center items-center    border' id = "loading">

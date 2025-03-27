@@ -28,45 +28,95 @@ export default function CoursesBanner() {
 			user_id: localStorage.getItem('token')
 			
 		}
-		let result = await axios.post(`${url}payment/payment`, obj);
+		let token = localStorage.getItem("token");
+		let result = await axios.post(
+			`${url}payment/payment`,
+			obj,
+            
+            {
+                headers:{
+
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                }
+
+           
+            }
+            
+		);
 		console.log(result.data)
-		const options = {
-			key: "rzp_test_pEZdDpwnJejkWR", // Add your Razorpay Key ID
-			amount: result.data.amount * 100, // Amount in paise
-			currency:'INR',
-			name: "Your Company Name",
-			description: "Test Transaction",
-			order_id: result.data.id,
-			handler: function (response) {
-			 alert(`Payment ID: ${response.razorpay_payment_id}`);
-			},
-			prefill: {
-			  name: "John Doe",
-			  email: "john.doe@example.com",
-			  contact: "9999999999",
-			},
-			theme: {
-			  color: "#3399cc",
-			},
-		  };
-        const rzp = new window.Razorpay(options);
-		rzp.open();
-		enroll()
+		if(result.data.success){
+			console.log(result.data.amount)
+
+			enroll();
+			const options = {
+				key: "rzp_test_pEZdDpwnJejkWR", // Add your Razorpay Key ID
+				amount: result.data.amount * 100, // Amount in paise
+				currency:'INR',
+				name: "Your Company Name",
+				description: "Test Transaction",
+				order_id: result.data.id,
+				handler: function (response) {
+				 alert(`Payment ID: ${response.razorpay_payment_id}`);
+				},
+				prefill: {
+				  name: "John Doe",
+				  email: "john.doe@example.com",
+				  contact: "9999999999",
+				},
+				theme: {
+				  color: "#3399cc",
+				},
+			  };
+			const rzp = new window.Razorpay(options);
+			rzp.open();
+			
+			setLogin(true)
+			
+
+		}else{
+			alert(result.data.message)
+		}
 		
 	}
 	let enroll = () =>{
-		let obj = {
-			user: localStorage.getItem('token'),
-			course_id: localStorage.getItem('id')
+		let user = localStorage.getItem("token")
+		
+		if(user){
+			console.log("kslks")
+			let obj = {
+				user: localStorage.getItem('token'),
+				course_id: localStorage.getItem('id')
+			}
+			let result1 = axios.post(`${url}enroll/enroll`, 
+				obj,
+            
+            {
+                headers:{
+
+                    "Authorization": `Bearer ${user}`,
+                    "Content-Type": "application/json"
+                }
+
+           
+            }
+			).then(result =>{
+				console.log(result)
+				if(result.data.success){
+					setLogin(true);
+					console.log(login)
+					console.log(result.data)
+				}
+				else{
+					setLogin(false)
+				}
+			})
+
 		}
-		let result1 = axios.post(`${url}enroll/enroll`, obj).then(result =>{
-			if(result1.data.success){
-				setLogin(true);
-			}
-			else{
-				setLogin(false)
-			}
-		})
+		else{
+			setLogin(false)
+		}
+		
 	
 	}
     return (

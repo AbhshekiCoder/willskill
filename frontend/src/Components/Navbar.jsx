@@ -21,8 +21,8 @@ export default function Navbar({sidebar_open}) {
 	
 	const [filter, setFilter] = useState();
 	const[courses1, setCourses1] = useState();
+	const[course, setCourse] = useState()
 	
-
     const Navigate = useNavigate()
 	const name = useContext(ProfileContext)
   function hovered(){
@@ -152,8 +152,20 @@ export default function Navbar({sidebar_open}) {
 	  }
 	function courses_detail(e){
 		localStorage.setItem('id', e);
-		Navigate('/CoursesDetail')
+		Navigate('/courses')
 
+	}
+	function input(e){
+	  setCourse(e.target.value)
+	}
+	let  search = async()=>{
+	
+		let result =  await axios.get(`${url}searchcourses/${course}/searchcourses/${course}`);
+		if(result.data.success){
+			localStorage.setItem("id", result.data.id)
+			Navigate('/courses')
+		}
+		
 	}
   return (
    <>
@@ -164,9 +176,9 @@ export default function Navbar({sidebar_open}) {
 
             {/* Logo */}
             <div className= 'logo mr-7 '>
-              <img src={logo} alt = "" className='w-full object-cover'/>
+             <Link to = "/">   <img src={logo} alt = "" className='w-full object-cover'/></Link>
             </div>
-			
+	
 			<div className='h-12 relative max-xl:hidden '>
 			{/* courses and hovered div */}
 			<div className='relative ' onMouseOver={hovered}  style={{marginTop:'10px'}}>
@@ -228,11 +240,11 @@ export default function Navbar({sidebar_open}) {
         <div className=' w-fit flex justify-around items-center rounded-full font-inter  max-xl:hidden' style={{backgroundColor:'#ECE6F0'}}>
           
           <div className=''> {/*Input box */}
-            <input className = 'w-64 h-11 rounded-tl-full rounded-bl-full pl-5 pr-3 text-base placeholder-gray-500 outline-none'type="text" style={{backgroundColor:'#ECE6F0'}} placeholder='Search'/>
+            <input className = 'w-64 h-11 rounded-tl-full rounded-bl-full pl-5 pr-3 text-base placeholder-gray-500 outline-none'type="text" style={{backgroundColor:'#ECE6F0'}} placeholder='Search' onChange={input}/>
           </div>
 
           <div className=' search-bar w-fit text-lg mr-5'>
-            <i className=" magnify rounded-full fa-solid fa-magnifying-glass cursor-pointer text-black" ></i>
+            <i className=" magnify rounded-full fa-solid fa-magnifying-glass cursor-pointer text-black" onClick = {search}></i>
           </div>
         </div>
 
@@ -244,7 +256,7 @@ export default function Navbar({sidebar_open}) {
           </div>
 
           <div className='mr-7'>
-			<a className='hover:no-underline cursor-pointer hover:text-purple-900 hover:font-medium' href="">Tech Temple Bussiness</a>
+			<a className='hover:no-underline cursor-pointer hover:text-purple-900 hover:font-medium' href="">Will Skill  Bussiness</a>
             {/* <p className='cursor-pointer hover:text-purple-800 hover:font-medium'>Tech Temple Bussiness</p> */}
           </div>
 

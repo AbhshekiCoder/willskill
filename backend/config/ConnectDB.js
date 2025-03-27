@@ -1,6 +1,6 @@
-let mongoose = require('mongoose');
-let dotenv = require('dotenv');
-let express = require('express');
+import mongoose  from 'mongoose';
+import dotenv  from 'dotenv';
+import express  from 'express';
 dotenv.config();
 let url = process.env.URL;
 function mongodbConnect(){
@@ -15,4 +15,5 @@ function mongodbConnect(){
     })
 
 }
-module.exports = mongodbConnect;
+
+export default mongodbConnect;

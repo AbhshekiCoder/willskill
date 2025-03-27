@@ -3,6 +3,10 @@ import React, { useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom';
 let url = import.meta.env.VITE_URL
 import { Loader, Message } from 'rsuite';
+import google from '../assets/google.png'
+import facebook from '../assets/facebook.png'
+import apple from '../assets/apple.png'
+
 
 export default function () {
     let Navigate = useNavigate()
@@ -73,56 +77,62 @@ export default function () {
    </Message>
 
    </div>
-      <div className='Signup flex  w-full h-screen  '>
+      
 	   
       
-     <div className='m-auto pl-4 pr-4 SignupFrame2 border p-3 ' style={{maxWidth: '600px'}} >
-   <div id = "SignupFrame2">
-     <div className='text-center'>
-     <p className='font-semibold text-3xl mt-16 mb-12 text-purple-700 '>Sign In to Continue Learning</p>
-     </div>
+     <div className='m-auto pt-20 pl-20 pr-20 max-sm:pl-12 max-sm:pr-12' style={{maxWidth: '650px'}} >
+    	<div id = "SignupFrame2" className='mb-20'>
+     	
+		<div className='text-center pl-8 pr-8 max-sm:pl-1 max-sm:pr-1'>
+     		<p className='font-semibold text-4xl mb-12 text-purple-700 '>Sign In to Continue Learning</p>
+     	</div>
      
-     <div>
-     <form action="" name = "form" onSubmit={login}>
+     <div className=''>
+     	<form action="" name = "form" onSubmit={login}>
       
        <div>
-       <input type="email" className='w-full h-10 border border-black border-1 rounded-md pl-3 pr-3 mt-8' placeholder='Email' name="email" required />
+       		<input type="email" className='w-full h-10 border border-black border-1 rounded-md pl-3 pr-3 mt-8' placeholder='Email' name="email" required />
        </div>
 
        <div>
-       <input type="password" className='w-full border h-10 border-black border-1 rounded-md pl-3 pr-3 mt-8' placeholder='Password' name="password" required/>
-       </div>
-       <div>
-      <select className='w-full h-10 border mt-3' name="role">
-      <option>
-        role
-      </option>
-        <option value="students">
-        Students
-
-        </option>
-        <option value="teacher">
-        Teachers
-
-        </option>
-        <option value="admin">
-          Admin
-        </option>
-      </select>
+       		<input type="password" className='w-full border h-10 border-black border-1 rounded-md pl-3 pr-3 mt-8' placeholder='Password' name="password" required/>
        </div>
 
        <div>
-         <button className='w-full text-white h-10 mt-8  text-lg font-bold ' style={{backgroundColor:'#920DE3'}}>Sign in</button>
+      		<select className='rounded-md pl-2 pr-5 w-full h-10 border mt-3' name="role">
+      			<option>role</option>
+        		<option value="students">Students</option>
+        		<option value="teacher">Teachers</option>
+        		<option value="admin">Admin</option>
+      		</select>
        </div>
 
+       <div>
+         	<button className='w-full text-white h-10 mt-8  text-lg font-bold ' style={{backgroundColor:'#920DE3'}}>Sign In</button>
+       </div>
+
+	   <div className='flex justify-around  max-sm:w-fit mt-10 max-sm:pt-10 max-sm:m-auto'> 
+			<div className='w-fit'>
+				<input type="checkbox" className='cursor-pointer border-2 h-6 border-black' name='checkbox' />
+			</div>
+
+			<div className='pl-3 w-fit'>
+				<p className='text-sm w-fit'>Send me special offer personalized recommendations, and learning tips.</p>
+			</div>
+		</div>
        
    
-     </form>
+     	</form>
+		<div className='flex justify-between w-44 m-auto pt-8 items-center'>
+			<img className = 'h-9 w-8 cursor-pointer' src ={google} />
+			<img className = 'h-8 w-8 cursor-pointer rounded-circle' src ={facebook} style={{backgroundColor:'#1877F2'}} />
+			<img className = 'h-8 w-8 cursor-pointer' src ={apple}/>
+		</div>
      </div>
 
      </div>
      </div>
-      </div>
+      
      
 </>
   )

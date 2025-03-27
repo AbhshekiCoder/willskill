@@ -1,14 +1,16 @@
-const express = require('express')
-const  bodyParser = require('body-parser');
+import express  from 'express'
+import   bodyParser from 'body-parser';
 const app = express();
-const dotenv = require('dotenv');
+import dotenv from 'dotenv';
 
 dotenv.config()
 const url = process.env.URL
-const { MongoClient} = require('mongodb');
-const login = require('../../model/usermodal/Login');
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken')
+ import  { MongoClient} from 'mongodb';
+ import jwt from 'jsonwebtoken';
+
+
+import bcrypt  from 'bcrypt';
+
 app.use(bodyParser.json());
 app.use(express.json());
 const router = express.Router();
@@ -62,4 +64,4 @@ router.post('/login', async(req, res) =>{
 
 
 
-module.exports = router;
+ export default router;

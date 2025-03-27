@@ -1,4 +1,4 @@
-let mongoose = require('mongoose');
+import mongoose from "mongoose";
 
 let AdminSchema = new mongoose.Schema({
         name:{
@@ -18,4 +18,4 @@ let AdminSchema = new mongoose.Schema({
 
 let AdminModel = mongoose.model('admin', AdminSchema);
 
-module.exports = AdminModel;
+export default AdminModel;

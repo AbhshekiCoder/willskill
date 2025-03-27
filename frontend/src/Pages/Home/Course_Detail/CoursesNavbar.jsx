@@ -200,7 +200,7 @@ export default function CoursesNavbar() {
     {/*Selected Feild Course 1 */}
         <div className='border flex rounded-2xl h-60  max-lg:h-fit max-md:h-60 max-lg:pb-3 max-md:pb-0 font-sans' style={{maxwidth: '100%',backgroundColor:'#EDEDED',boxShadow: 'rgba(99, 99, 99, 0.2) 0px 2px 8px 0px'}}>
             <div className='w-full h-full    '>
-                <img src={CourseImage} className='w-full h-full  max-md:h-60 rounded-tl-2xl rounded-bl-2xl' alt="" style={{height:'100%'}} />
+                <img src={`data:${Element.imageType};base64,${Element.image}`} className='w-full h-full  max-md:h-60 rounded-tl-2xl rounded-bl-2xl' alt="" style={{height:'100%'}} />
             </div>
                 {/* details */}
             <div className='w-2/3 h-full '>
@@ -208,7 +208,7 @@ export default function CoursesNavbar() {
                     <p className='text-lg font-bold  '>{Element.title}</p>
                 </div>
                 <div className='ml-6 mt-2 mr-3 mb-1 'style={{color:'#49454F'}}>
-                    <p className=' max-sm:text-xs'>{Element.description.length > 129?Element.description.substr(0, 129) + '...':Element.description}
+                    <p className=' max-sm:text-xs'>{Element.description.length > 129?Element.description.substr(0, 100) + '...':Element.description}
                     </p>
                 </div>
                 <div className='flex justify-end ml-6 mt-6 max-lg:mt-10 max-md:mt-5 max-sm:mt-6  max-sm:p-3 '>

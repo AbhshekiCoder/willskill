@@ -1,42 +1,49 @@
-const express = require('express');
-const bodyParser = require('body-parser');
-const {MongoClient} = require('mongodb');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const mongodbConnect = require('./config/ConnectDB');
-const app = express();
+import express  from 'express';
+import bodyParser  from 'body-parser';
+import {MongoClient}  from 'mongodb';
+import mongoose  from 'mongoose';
+import cors  from 'cors';
+
+const app =   express();
 app.use(bodyParser.json());
 app.use(express.json());
 app.use(cors())
 
 
-const register = require('./api/users/Register');
-const login = require('./api/users/Login');
-const user_profile_update = require('./api/users/Update');
-const user_password_reset = require('./api/users/Password_Reset');
-const register_apps = require('./api/users/register_apps');
-const user_detail = require('./api/users/user_detail');
-const jwt = require('jsonwebtoken');
-const courses = require('./api/teachers/courses');
-const user_review = require('./api/student/user_review');
-const review = require('./api/fetch/review');
-const customer_contact = require('./api/users/customer_contact');
-const signin = require('./api/users/signin')
-const dotenv = require('dotenv');
-const enroll_courses = require('./api/fetch/coursesenroll.js')
-const quiz = require('./api/fetch/quiz')
-const adminsignup = require('./api/admin/adminsignup.js')
-const module_submit = require('./api/teachers/muodule_submit.js');
-const course_detail = require('./api/fetch/course_detail.js');
-const { appendFile } = require('fs');
-const payment = require('./api/users/payment.js');
-const enroll = require('./api/users/enroll.js');
+import register  from './api/users/Register.js';
+import login from   './api/users/Login.js';
+import  user_profile_update  from './api/users/Update.js';
+import  user_password_reset  from './api/users/Password_Reset.js';
+import  register_apps  from './api/users/register_apps.js';
+import  user_detail  from './api/users/user_detail.js';
+import  jwt  from 'jsonwebtoken';
+import  courses  from './api/teachers/courses.js';
+import  user_review  from './api/student/user_review.js';
+import  review  from './api/fetch/review.js';
+import  customer_contact  from './api/users/customer_contact.js';
+import  signin  from './api/users/signin.js';
+import  dotenv  from 'dotenv';
+import  enroll_courses  from './api/fetch/coursesenroll.js'
+import  quiz  from './api/fetch/quiz.js'
+import  adminsignup  from './api/admin/adminsignup.js'
+import  module_submit  from './api/teachers/module_submit.js';
+import  course_detail  from './api/fetch/course_detail.js';
+import  { appendFile }  from 'fs';
+import  payment  from './api/users/payment.js';
+import  enroll  from './api/users/enroll.js';
+import   authenticateToken   from './authentication/authentication.js';
+import  searchCourses  from './api/fetch/search_courses.js';
+import    topic_submit   from './api/teachers/topic_submit.js';
+import mongodbConnect from './config/ConnectDB.js'
+import module from './api/student/module.js';
+import topics from './api/student/topics.js';
+import video from './api/student/video.js';
 
 
 
 let url =  process.env.URL;
 
-mongodbConnect();
+mongodbConnect()
 
 app.use('/register', register);
 app.use('/login', login);
@@ -54,11 +61,16 @@ app.use('/quiz', quiz)
 app.use('/adminsignup', adminsignup);
 app.use('/module_submit', module_submit )
 app.use('/course_detail/:id', course_detail)
-app.use('/payment', payment)
-app.use('/enroll', enroll)
+app.use('/payment', authenticateToken, payment)
+app.use('/enroll', authenticateToken, enroll)
+app.use('/searchcourses/:title', searchCourses)
+app.use('/topic_submit', topic_submit)
+app.use('/modules', module)
+app.use('/topics', topics)
+app.use('/video', video)
 app.post('/course_detail', (req, res)=>{
-    const client = new MongoClient(url);
-    const db = client.db("Tech_Temple");
+    const  client = new MongoClient(url);
+    const  db = client.db("Tech_Temple");
     const collection = db.collection("courses");
     collection.find().toArray().then(result =>{
         res.send(result);
@@ -92,6 +104,7 @@ app.use(express.static('public', {
   }
 }));
 
+ 
 app.listen(3000)
 
 
