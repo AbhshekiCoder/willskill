@@ -174,7 +174,7 @@ export default function Quiz() {
     </div>
     <nav className='flex justify-between items-center sticky-top bg-gray-100 h-16 ' style={{ boxShadow: 'rgba(99, 99, 99, 0.2) 0px 2px 8px 0px'}}>
     <div className='logo ml-3'>
-    <Link to='/'>Tech Temple</Link>
+    <Link to='/'>Will Skill</Link>
 
     </div>
     <div>

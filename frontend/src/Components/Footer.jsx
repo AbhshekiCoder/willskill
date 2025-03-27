@@ -97,7 +97,7 @@ Support
         
         </div>
         <div className='flex justify-center text-gray-500 mt-3 font-sans'>
-         @copyright reserved by TechTemple
+         @copyright reserved by Will Skill
 
          </div>
 
