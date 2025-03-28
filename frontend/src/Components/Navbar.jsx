@@ -3,7 +3,7 @@ import logo from '../assets/logo.png'
 import { Link, useNavigate } from 'react-router-dom';
 import { ProfileContext } from '../profilecontext';
 import axios from 'axios'
-import url from '../misc/url'
+
 import { auth } from '../firebase/firebase';
 import { signOut } from '../firebase/firebase';
 import Profile from './Navbar/Profile';
@@ -11,6 +11,7 @@ import Sidebar from '../Components/Sidebar'
 import { useSelector } from 'react-redux';
 
 export default function Navbar({sidebar_open}) {
+	let url = import.meta.env.VITE_URL
 	let user = useSelector((state) =>  state.name.value);
 	console.log(user)
   	const [ishovered, setIshovered] = useState(false)
