@@ -191,7 +191,7 @@ export default function Navbar({sidebar_open}) {
 
 					{/*Section 2 */}
 					{courses?courses.map(Element =>(
-						<div className=' group flex border-b border-gray-900  hover:border-none justify-between items-center pl-6 pr-6 hover:bg-gray-200  bg-purple-50' style={{height:'50px'}} onMouseOver={()=>courses_type(Element.name)}>
+						<div className=' group flex border-b border-gray-900  hover:border-none justify-between items-center pl-6 pr-6 hover:bg-gray-200  bg-purple-50 hover:cursor-pointer' style={{height:'50px'}} onMouseOver={()=>courses_type(Element.name)}>
 		        		    <div className=''>
 		        			  	<a className='hover:no-underline  text-gray-700 group-hover:text-purple-600' href="">{Element.name}</a>
 		        		  	</div>
@@ -208,7 +208,7 @@ export default function Navbar({sidebar_open}) {
 		    		</div>
 					<div className='hidden    h-fit w-80 z-10    text-gray-700   coursetype' onMouseLeave={()=>{document.querySelector('.coursetype').style.display = "none"}} >
 					{courses1?courses1.map(Element =>(
-						<div className='w-full  text-lg  border-b-2 pl-3 pr-3 h-12 flex items-center hover:bg-gray-200  hover:text-purple-600  bg-purple-50' onClick={()=>courses_detail(Element.id)} id={Element.id}>{Element.title}</div>
+						<div className='w-full  text-lg  border-b-2 pl-3 pr-3 h-12 flex items-center hover:bg-gray-200  hover:text-purple-600  bg-purple-50 hover:cursor-pointer' onClick={()=>courses_detail(Element.id)} id={Element.id}>{Element.title}</div>
 
 					)):''}
 	                </div>
@@ -253,16 +253,16 @@ export default function Navbar({sidebar_open}) {
         <div className='Category flex justify-between items-center  from-neutral-900 font-inter text-lg max-xl:hidden' style={{fontWeight:'500'}}>
           <div className='mr-7'>
             {/* <p className='cursor-pointer hover:text-purple-900'>Plan & Pricing</p>*/}
-			<a className ='cursor-pointer hover:no-underline hover:text-purple-900 hover:font-medium' href="">Plan & Pricing</a>
+			<Link to ="/planpricing" className ='cursor-pointer hover:no-underline hover:text-purple-900 hover:font-medium' >Plan & Pricing</Link>
           </div>
 
           <div className='mr-7'>
-			<a className='hover:no-underline cursor-pointer hover:text-purple-900 hover:font-medium' href="">Will Skill  Bussiness</a>
+			<Link to = "/business" className='hover:no-underline cursor-pointer hover:text-purple-900 hover:font-medium' >Will Skill  Bussiness</Link>
             {/* <p className='cursor-pointer hover:text-purple-800 hover:font-medium'>Tech Temple Bussiness</p> */}
           </div>
 
           <div  className='mr-7'>
-			<a className='hover:no-underline cursor-pointer hover:text-purple-900 hover:font-medium' href="">Success Stories</a>
+			<Link to="/successtories" className='hover:no-underline cursor-pointer hover:text-purple-900 hover:font-medium' >Success Stories</Link>
             {/* <p className='cursor-pointer hover:text-purple-800 hover:font-medium'>Success Stories</p> */}
           </div>
         </div>

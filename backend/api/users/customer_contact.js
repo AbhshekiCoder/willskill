@@ -14,9 +14,10 @@ const url = process.env.URL
 import customer_contact from '../../model/usermodal/contact.js';
 app.use(bodyParser.json());
 app.use(express.json());
-const router = express.Router();
-router.post('/customer_contact', async(req, res) =>{
+const customerForm = express.Router();
+customerForm.post('/customer_contact', async(req, res) =>{
     const {email, name, description} = req.body;
+    console.log(email)
    
    
     const client = new MongoClient(url);
@@ -28,9 +29,15 @@ router.post('/customer_contact', async(req, res) =>{
         description: description
     })
     try{
-        collection.insertOne(obj).then(()=>{
-            res.send({"success": true, "message": "successfully updated your query we resolve you query in quickly"})
-        })
+      let result = await  collection.insertOne(obj);
+      console.log(result)
+      if(result){
+        res.send({success: true, message: "successfully updated your query we resolve you query in quickly"})
+
+      }
+
+            
+        
     }
     catch(err){
         res.send({"success": false, "message": err.message});
@@ -39,4 +46,4 @@ router.post('/customer_contact', async(req, res) =>{
     }
 })
 
-export default router
+export default customerForm

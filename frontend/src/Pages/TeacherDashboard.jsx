@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import '../CSS/courses.css';
 import axios from "axios";
 import logo from '../assets/logo.png'
+import { Loader } from 'rsuite';
+import {Link} from 'react-router-dom'
 
 let url = import.meta.env.VITE_URL
 
@@ -12,168 +14,131 @@ function TeacherDashboard(){
     let [module, setModule] = useState();
     let [topic, setTopic] = useState();
     let [file, setFile] = useState();
-    useEffect(()=>{
-        
-       
+    let [loading, setLoading] = useState(false);
 
-            
-    },[])
+    useEffect(()=>{},[])
+
     function course_fetch(){
-        let result = axios.post(`${url}course_detail` ).then(result =>{
+        axios.post(`${url}course_detail`).then(result =>{
             setCourses(result.data);
             console.log(courses);
         })
-    
-    
-       }
+    }
+
     function form(){
         document.querySelector('.course-form').style.display = "block";
     }
-   
-  
-    
-   function topics(e){
-      document.querySelector('.syllabus').style.display = "block";
-      let num = e.target.value;
-      setCount(num)
-      
-    
-   }
-   function course_modal(){
-    document.querySelector('.course-form').style.display = "none";
-   }
-   
-   function course_submit(e){
-  
-    let from =  document.getElementById("courses")
-    console.log(from)
-    let formData = new FormData()
-    let name = from.title.value;
-    let price = from.price.value;
-    let detail = from.detail.value;
-    let duration = from.duration.value;
-    let project = from.project.value;
-    let type = from.type.value;
 
-    formData.append('name', name)
-    formData.append('price', price)
-    formData.append('detail', detail)
-    formData.append('duration', duration)
-    formData.append('project', project)
-    formData.append('type', type)
-    formData.append('file', file)
-
- 
-    console.log(duration);
-    let data = {
-      name: name,
-      price: price,
-      detail: detail,
-      duration: duration,
-      projects: project,
-      type: type
+    function topics(e){
+        document.querySelector('.syllabus').style.display = "block";
+        let num = e.target.value;
+        setCount(num)
     }
-    let result = axios.post(`${url}courses/courses`, formData).then(result =>{
-        console.log(result)
-        if(result.data.success){
-            alert(result.data.message);
-            course_fetch();
-           
 
-        }
-        else{
-            alert(result.data.message)
-        }
-     
-     
-      
-     
-     })
-
-
-
-   }
-
-
-
-   function topic_modal(){
-    document.querySelector('.topic_form').style.display = "none";
-   }
-
-
-   useEffect(()=>{
-    course_fetch();
-    
-    
-    
-   },[])
-   
-function modules_form(id, name){
-   
-    document.querySelector('.topic_form').style.display = "block";
-    alert(`add modules related to course:${name}`);
-    setId(id);
-   
-
-}
-function topics_submit(){
-    let form = document.forms['topic-form'];
-    let name = form.title.value;
-    let obj = {
-        id: id,
-        name: name
+    function course_modal(){
+        document.querySelector('.course-form').style.display = "none";
     }
-    let result = axios.post(`${url}module_submit/module_submit`, obj).then((result)=>{
-       alert(result.data.success);
-       setModule(result.data.data[0].topic_id)
-       setTopic(name)
-       document.querySelector('.syllabus-form').style.display = 'block';
-    })
-}
-function syllabus_submit(){
-    let form = document.getElementById("topic");
-    let title = form.title.value;
 
-    let formData = new FormData();
-    console.log(file.type)
-    formData.append("file", file);
-    formData.append("title", title);
-    formData.append("topic_id", topic);
-    formData.append("type", file.type);
-    formData.append("course_id", id);
-    
+    function course_submit(e){
+        setLoading(true);
+        let from = document.getElementById("courses")
+        let formData = new FormData()
+        let name = from.title.value;
+        let price = from.price.value;
+        let detail = from.detail.value;
+        let duration = from.duration.value;
+        let project = from.project.value;
+        let type = from.type.value;
 
-    let result = axios.post(`${url}topic_submit/topic_submit`, formData).then((result)=>{
-        alert(result.data);
-       
-       
-     })
-    
-}
-function img(e){
-    let file = e.target.files[0];
-    setFile(file);
-    console.log(file);
+        formData.append('name', name)
+        formData.append('price', price)
+        formData.append('detail', detail)
+        formData.append('duration', duration)
+        formData.append('project', project)
+        formData.append('type', type)
+        formData.append('file', file)
 
+        axios.post(`${url}courses/courses`, formData).then(result =>{
+            setLoading(false);
+            if(result.data.success){
+                alert(result.data.message);
+                course_fetch();
+            }
+            else{
+                alert(result.data.message)
+            }
+        }).catch(() => setLoading(false));
+    }
 
-}
-function syllabus_modal(){
-    document.querySelector('.syllabus-form').style.display = "none"
-}
-function btn(){
-    alert("hello")
-}
+    function topic_modal(){
+        document.querySelector('.topic_form').style.display = "none";
+    }
+
+    useEffect(()=>{
+        course_fetch();
+    },[])
+
+    function modules_form(id, name){
+        document.querySelector('.topic_form').style.display = "block";
+        alert(`add modules related to course:${name}`);
+        setId(id);
+    }
+
+    function topics_submit(){
+        setLoading(true);
+        let form = document.forms['topic-form'];
+        let name = form.title.value;
+        let obj = { id: id, name: name }
+        axios.post(`${url}module_submit/module_submit`, obj).then((result)=>{
+            setLoading(false);
+            alert(result.data.success);
+            setModule(result.data.data[0].topic_id)
+            setTopic(name)
+            document.querySelector('.syllabus-form').style.display = 'block';
+        }).catch(() => setLoading(false));
+    }
+
+    function syllabus_submit(){
+        setLoading(true);
+        let form = document.getElementById("topic");
+        let title = form.title.value;
+
+        let formData = new FormData();
+        formData.append("file", file);
+        formData.append("title", title);
+        formData.append("topic_id", topic);
+        formData.append("type", file.type);
+        formData.append("course_id", id);
+
+        axios.post(`${url}topic_submit/topic_submit`, formData).then((result)=>{
+            setLoading(false);
+            alert(result.data);
+        }).catch(() => setLoading(false));
+    }
+
+    function img(e){
+        let file = e.target.files[0];
+        setFile(file);
+        console.log(file);
+    }
+
+    function syllabus_modal(){
+        document.querySelector('.syllabus-form').style.display = "none"
+    }
+
     return(
         <>
-       
+        {loading && <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-40 flex items-center justify-center z-50"><Loader size="lg" speed="fast" backdrop content="Loading..." /></div>}
+
         <div className='modal w-44 h-16 btn z-10'>
-            <button  className='flex justify-around w-full h-full text-white items-center'><i className="cursor-pointer fa-solid fa-headset"></i><div>Support</div><i className ="cursor-pointer fa-solid fa-angle-up"></i></button>
-           </div>
+            <button className='flex justify-around w-full h-full text-white items-center'><i className="cursor-pointer fa-solid fa-headset"></i><div>Support</div><i className ="cursor-pointer fa-solid fa-angle-up"></i></button>
+        </div>
+
            <div className="containerss">
            {/* Navbar */}
        <div className="headbar border-2 flex items-center h-16 mb-9" style={{boxShadow: "rgba(0, 0, 0, 0.16) 0px 1px 4px"}}>
            <div className="text-grey-400 w-36 h-full ml-36 max-lg:ml-28 max-md:ml-11 text-gray-500 flex items-center ">
-              <img src={logo} alt="" className="w-full h-full" />
+             <Link to = "/"> <img src={logo} alt="" className="w-full h-full" /></Link>
            </div>
            <div className="flex justify-end w-full ">
                {/* <button className="rounded-xl text-white bg-purple-500" onClick={form} >export csv</button> */}

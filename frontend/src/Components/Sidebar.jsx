@@ -5,13 +5,13 @@ import url from '../misc/url';
 import { ProfileContext } from '../profilecontext';
 import { signOut } from 'firebase/auth';
 import { auth } from '../firebase/firebase';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 export default function Sidebar({username, profile, logout}) {
   const [courses, setCourses] = useState();
   const [courses1, setCourses1] = useState();
   const [filter, setFilter] = useState();
-  
+  const Navigate = useNavigate()
 
 	let data = async()=>{
 	  let result = await axios.post(`${url}course_detail`);
@@ -84,6 +84,16 @@ export default function Sidebar({username, profile, logout}) {
    document.querySelector('.course-type').style.display = "none"
 
   }
+  let  search = async(course)=>{
+    
+      let result =  await axios.get(`${url}searchcourses/${course}/searchcourses/${course}`);
+      if(result.data.success){
+        localStorage.setItem("id", result.data.id)
+        Navigate('/courses')
+        document.querySelector('.sidebar').style.display = "none"
+      }
+      
+    }
   
 
   return (
@@ -96,17 +106,17 @@ export default function Sidebar({username, profile, logout}) {
        {profile? <div className='  pl-3 text-purple-500 font-bold text-base title'>
         {username}
           
-        </div>:<div className='  pl-3 text-purple-500 font-bold text-base'>
+        </div>:<div className='  pl-3 text-purple-500 font-bold text-base hover:cursor-pointer'>
          <Link to = "/login">Login</Link> 
         </div>}
-       {profile?<div className=' mt-3 pl-3 text-purple-500 font-bold text-base' onClick={logout}>
+       {profile?<div className=' mt-3 pl-3 text-purple-500 font-bold text-base  hover:cursor-pointer' onClick={logout}>
           Log out
-        </div>:<div className=' mt-3 pl-3 text-purple-500 font-bold text-base'>
+        </div>:<div className=' mt-3 pl-3 text-purple-500 font-bold text-base  hover:cursor-pointer'>
           Signup
         </div>}
         
-        <div className=' mt-3 pl-3 text-purple-500 font-bold text-base'>
-          Plan & Pricing
+        <div className=' mt-3 pl-3 text-purple-500 font-bold text-base hover:cursor-pointer'>
+         <Link to ="/planpricing"> Plan & Pricing </Link>
         </div>
 
        </div>
@@ -114,13 +124,13 @@ export default function Sidebar({username, profile, logout}) {
        <p className='text-gray-600 font-bold text-lg'>Most Popular</p>
        <div className='courses'>
        {courses?courses.map(Element =>(
-        <div className=' mt-3 flex justify-between item-center ' >
+        <div className=' mt-3 flex justify-between item-center hover:cursor-pointer ' >
        <div className='flex justify-start' onMouseOver={()=>courses_type(Element)}> 
         <i className='fa-solid fa-angle-left   text-gray-400 text-lg' ></i>
 
 
         </div>
-       <div className='font-semibold text-base text-center flex justify-end'>
+       <div className='font-semibold text-base text-center flex justify-end  hover:cursor-pointer'>
          {Element}
         </div>
       
@@ -162,7 +172,7 @@ export default function Sidebar({username, profile, logout}) {
        </div>
        <div className='mt-3 p-3'>
        {courses1?courses1.map(Element =>(
-          <div className='mt-3'>
+          <div className='mt-3 hover:cursor-pointer'  onClick={() => search(Element)}>
             {Element}
           </div>
 

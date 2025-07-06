@@ -25,13 +25,7 @@ const courses_scehema = new mongoose.Schema({
     image:{
         type: String
     },
-    start_Date:{
-        
-    },
-    end_Date:{
-       
-    }
-   
+      
 })
 
 const courses = mongoose.model('courses', courses_scehema);

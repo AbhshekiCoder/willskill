@@ -20,7 +20,7 @@ import  jwt  from 'jsonwebtoken';
 import  courses  from './api/teachers/courses.js';
 import  user_review  from './api/student/user_review.js';
 import  review  from './api/fetch/review.js';
-import  customer_contact  from './api/users/customer_contact.js';
+
 import  signin  from './api/users/signin.js';
 import  dotenv  from 'dotenv';
 import  enroll_courses  from './api/fetch/coursesenroll.js'
@@ -38,6 +38,8 @@ import mongodbConnect from './config/ConnectDB.js'
 import module from './api/student/module.js';
 import topics from './api/student/topics.js';
 import video from './api/student/video.js';
+import customer_contact from './model/usermodal/contact.js';
+
 
 
 
@@ -54,7 +56,7 @@ app.use('/user_detail', user_detail);
 app.use('/courses', courses);
 app.use('/user_review', user_review)
 app.use('/review', review)
-app.use('/customer_contact', customer_contact);
+
 app.use('/signin', signin)
 app.use('/enroll_courses/:id', enroll_courses)
 app.use('/quiz', quiz)
@@ -90,10 +92,40 @@ app.use('/token', (req, res)=>{
       
     });
   });
-  
+  app.post('/customer_contact', async(req, res) =>{
+    const {email, name, description} = req.body;
+    
+   
+   
+    const client = new MongoClient(url);
+    const db = client.db("Tech_Temple");
+    const collection = db.collection("contact");
+    let obj = new customer_contact({
+        name: name,
+        email: email,
+        description: description
+    })
+    try{
+      let result = await  collection.insertOne(obj);
+     
+      if(result){
+        res.send({success: true, message: "successfully updated your query we resolve you query in quickly"})
+
+      }
+
+            
+        
+    }
+    catch(err){
+        res.send({"success": false, "message": err.message});
+        console.log(err.message);
+        
+    }
+})
   
 
 app.use('/', (req, res)=>{
+  
     res.send('<h1>hello</h1>')
 })
 app.use(express.static('public', {

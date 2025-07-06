@@ -33,6 +33,10 @@ import Admin from './Pages/Admin'
 import { useDispatch } from 'react-redux'
 import { userinfo } from './features/userinfo'
 import Video from './Pages/Video'
+import PlanPricing from './Pages/PlanPricing'
+import SuccessStories from './Pages/SuccessStories'
+import Business from './Pages/Business'
+import ResumeBuilder from './Pages/ResumeBuilder'
 
 let url = import.meta.env.VITE_URL
 
@@ -149,6 +153,10 @@ for (const key in object) {
       <Route path= '/register' element={<Register/>}></Route>
       <Route path = '/teachers' element = {<TeacherDashboard/>}></Route>
       <Route path= '/Video' element= {<Video/>}></Route>
+      <Route path='/planpricing' element={<PlanPricing/>}></Route>
+      <Route path='/successtories' element={<SuccessStories/>}></Route>
+      <Route path='/business' element={<Business/>}></Route>
+      <Route path="/resume" element={<ResumeBuilder/>}></Route>
       
    
    

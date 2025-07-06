@@ -26,7 +26,8 @@ searchCourses.get('/searchcourses/:title', (req, res) =>{
     try{
 
         collection.find().toArray().then(result =>{
-            let array = result.filter(Element => Element.title.toUpperCase() == Title);
+            let array = result.filter(Element => Element.title.toUpperCase() == Title || Element.title.toUpperCase().includes(title.toUpperCase()));
+           
           
              res.send({success: true, id:  array[0]._id});
         })

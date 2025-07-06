@@ -1,26 +1,11 @@
-/** @type {import('tailwindcss').Config} */
-export default {
-  content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
-  ],
+module.exports = {
+  content: ['./src/**/*.{js,jsx}'],
   theme: {
     extend: {
-      fontFamily: {
-        inter: ['Inter', 'sans-serif'],
-      },
+      animation: {
+        marquee: 'marquee 30s linear infinite',
+      }
     },
   },
   plugins: [],
 }
-
-// tailwind.config.js
-// module.exports = {
-//   theme: {
-//     extend: {
-//       fontFamily: {
-//         inter: ['Inter', 'sans-serif'],
-//       },
-//     },
-//   },
-// }
