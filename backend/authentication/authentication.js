@@ -20,7 +20,7 @@ function authenticateToken(req, res, next){
        next();
 
     }catch (error) {
-    res.status(400).send("signin first.");
+    res.send({success: false, message: "signin first"});
     console.log(error.message)
   }
 }

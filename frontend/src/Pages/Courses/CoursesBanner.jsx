@@ -26,6 +26,7 @@ export default function CoursesBanner() {
 	},[id])
 
 	let payment = async() =>{
+	
 		let obj = {
 			name: data.title,
 			course_id: data._id,
@@ -33,6 +34,7 @@ export default function CoursesBanner() {
 			user_id: localStorage.getItem('token')
 		}
 		let token = localStorage.getItem("token");
+		
 		let result = await axios.post(
 			`${url}payment/payment`,
 			obj,
@@ -73,6 +75,7 @@ export default function CoursesBanner() {
 			alert(result.data.message)
 		}
 	}
+	
 
 	let enroll = () =>{
 		let user = localStorage.getItem("token")
