@@ -10,9 +10,11 @@ export default function CoursesBanner() {
 	let [login, setLogin] = useState(false);
 	let [data, setData] = useState()
 	let url = import.meta.env.VITE_URL
+	
 
+ let id = localStorage.getItem('id')
     let course = async() =>{
-        let id = localStorage.getItem('id')
+       
         let result = await axios.get(`${url}course_detail/${id}/course_detail/${id}`);
         setData(result.data);
         console.log(data)
@@ -21,7 +23,7 @@ export default function CoursesBanner() {
  	useEffect(()=>{
 		course();
 		enroll()
-	},[])
+	},[id])
 
 	let payment = async() =>{
 		let obj = {

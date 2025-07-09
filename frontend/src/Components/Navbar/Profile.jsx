@@ -19,7 +19,7 @@ function Profile(){
 		    	    	</div>
 						<div className='flex border-b border-gray-400 items-center pl-4 group hover:bg-gray-300' style={{height:'45px'}}>
 		    	    	    <div >
-		    	    		  	<a className='hover:no-underline group-hover:text-purple-600' href="">Home</a>
+		    	    		  	<Link to = "/" className='hover:no-underline group-hover:text-purple-600' href="">Home</Link>
 		    	    	  	</div>
 		    	    	</div>
 						{/* sections 2 */}
@@ -31,30 +31,26 @@ function Profile(){
 						{/* section 3 */}
 						<div className='group flex border-b border-gray-400  items-center pl-4 hover:bg-gray-300' style={{height:'45px'}}>
 		    	    	    <div>
-		    	    		  	<a className='hover:no-underline group-hover:text-purple-600' href="">Edit Resume</a>
+		    	    		  	<Link to = "/business" className='hover:no-underline group-hover:text-purple-600' href="">Will Skill Business</Link>
 		    	    	  	</div>
 		    	    	</div>
 						{/* section 4 */}
 						<div className='group flex border-b border-gray-400   items-center pl-4  hover:bg-gray-300' style={{height:'45px'}}>
 		    	    	    <div>
-		    	    		  	<Link to = "/quiz" className='hover:no-underline group-hover:text-purple-600' href="">Quiz</Link>
+		    	    		  	<Link to = "/planpricing" className='hover:no-underline group-hover:text-purple-600' href="">Plan & Pricing</Link>
+		    	    	  	</div>
+		    	    	</div>
+						
+						
+						<div className='group flex items-center pl-4  hover:bg-gray-300' style={{height:'45px'}}>
+		    	    	    <div>
+		    	    		  	<Link to = "/register" className='hover:no-underline group-hover:text-purple-600' href="">Admin</Link>
 		    	    	  	</div>
 		    	    	</div>
 						{/* section 5 */}
 						<div className='group flex border-b border-gray-400   items-center pl-4  hover:bg-gray-300' style={{height:'45px'}}>
 		    	    	    <div>
 		    	    		  	<a className='hover:no-underline group-hover:text-purple-600' href="">Help Center</a>
-		    	    	  	</div>
-		    	    	</div>
-						{/* section 6 */}
-						<div className='group flex items-center pl-4  hover:bg-gray-300' style={{height:'45px'}}>
-		    	    	    <div>
-		    	    		  	<a className='hover:no-underline group-hover:text-purple-600' href="">More</a>
-		    	    	  	</div>
-		    	    	</div>
-						<div className='group flex items-center pl-4  hover:bg-gray-300' style={{height:'45px'}}>
-		    	    	    <div>
-		    	    		  	<Link to = "/register" className='hover:no-underline group-hover:text-purple-600' href="">Admin</Link>
 		    	    	  	</div>
 		    	    	</div>
 

@@ -26,10 +26,19 @@ searchCourses.get('/searchcourses/:title', (req, res) =>{
     try{
 
         collection.find().toArray().then(result =>{
-            let array = result.filter(Element => Element.title.toUpperCase() == Title || Element.title.toUpperCase().includes(title.toUpperCase()));
            
-          
+             let searchWords = title.toUpperCase().split(" ");
+
+let array = result.filter(Element => {
+  let courseTitle = Element.title.toUpperCase();
+  return searchWords.some(word => courseTitle.includes(word));
+});
+
+            if(array.length > 0){
              res.send({success: true, id:  array[0]._id});
+            }else{
+                res.send({success: false, message: "no course available"})
+            }
         })
     }
     catch(err){

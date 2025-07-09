@@ -59,7 +59,13 @@ export default function Sidebar({username, profile, logout}) {
     data();
    
    console.log(profile)
-
+const handleResize = () => {
+    if (window.innerWidth > 1276) {
+      document.querySelector('.sidebar').style.display = 'none';
+    }
+  };
+  window.addEventListener('resize', handleResize);
+  return () => window.removeEventListener('resize', handleResize);
 
 
   },[])
@@ -97,7 +103,7 @@ export default function Sidebar({username, profile, logout}) {
   
 
   return (
-    <div className='sidebar modal border h-full w-full  hidden max-2xl:block    '>
+    <div className='sidebar modal border h-full w-full  hidden'>
     <div id = "sidebar" className=' opacity mt-0 '>
        <div className='sidebar-details'>
     
@@ -107,16 +113,24 @@ export default function Sidebar({username, profile, logout}) {
         {username}
           
         </div>:<div className='  pl-3 text-purple-500 font-bold text-base hover:cursor-pointer'>
-         <Link to = "/login">Login</Link> 
+         <Link to = "/login" onClick={() =>{document.querySelector('.sidebar').style.display = "none"}}>Login</Link> 
         </div>}
        {profile?<div className=' mt-3 pl-3 text-purple-500 font-bold text-base  hover:cursor-pointer' onClick={logout}>
           Log out
         </div>:<div className=' mt-3 pl-3 text-purple-500 font-bold text-base  hover:cursor-pointer'>
           Signup
         </div>}
-        
         <div className=' mt-3 pl-3 text-purple-500 font-bold text-base hover:cursor-pointer'>
-         <Link to ="/planpricing"> Plan & Pricing </Link>
+         <Link to ="/resume" onClick={() =>{document.querySelector('.sidebar').style.display = "none"}}> Edit Resume </Link>
+        </div>
+        <div className=' mt-3 pl-3 text-purple-500 font-bold text-base hover:cursor-pointer'>
+         <Link to ="/quiz" onClick={() =>{document.querySelector('.sidebar').style.display = "none"}}> Quiz </Link>
+        </div>
+       <div className=' mt-3 pl-3 text-purple-500 font-bold text-base hover:cursor-pointer'>
+         <Link to ="/business" onClick={() =>{document.querySelector('.sidebar').style.display = "none"}}> Business </Link>
+        </div>
+        <div className=' mt-3 pl-3 text-purple-500 font-bold text-base hover:cursor-pointer'>
+         <Link to ="/planpricing" onClick={() =>{document.querySelector('.sidebar').style.display = "none"}}> Plan & Pricing </Link>
         </div>
 
        </div>
@@ -151,7 +165,7 @@ export default function Sidebar({username, profile, logout}) {
        </div>
        
        <div className='mt-3 text-gray-400 text-lg font-semibold'>
-       Success Stories
+      <Link to = "/successstories" onClick={() =>{document.querySelector('.sidebar').style.display = "none"}}>Success Stories</Link> 
 
        </div>
        <div className='mt-3 text-gray-400 text-lg font-semibold'>

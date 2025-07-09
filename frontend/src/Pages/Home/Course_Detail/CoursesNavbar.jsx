@@ -142,7 +142,7 @@ export default function CoursesNavbar() {
               ) : (
                 courses.map((type) => (
                   <div
-                    className="course_type rounded-full hover:bg-purple-400 hover:text-black"
+                    className="course_type rounded-full hover:bg-purple-400 hover:text-black hover:cursor-pointer"
                     onClick={() => course_filter1(type)}
                     id={type}
                     key={type}

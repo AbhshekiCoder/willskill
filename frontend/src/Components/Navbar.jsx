@@ -166,6 +166,10 @@ export default function Navbar({sidebar_open}) {
 			localStorage.setItem("id", result.data.id)
 			Navigate('/courses')
 		}
+	    else{
+			localStorage.removeItem("id")
+			Navigate('/courses')
+		}
 		
 	}
   return (
@@ -253,11 +257,11 @@ export default function Navbar({sidebar_open}) {
         <div className='Category flex justify-between items-center  from-neutral-900 font-inter text-lg max-xl:hidden' style={{fontWeight:'500'}}>
           <div className='mr-7'>
             {/* <p className='cursor-pointer hover:text-purple-900'>Plan & Pricing</p>*/}
-			<Link to ="/planpricing" className ='cursor-pointer hover:no-underline hover:text-purple-900 hover:font-medium' >Plan & Pricing</Link>
+			<Link to ="/resume" className ='cursor-pointer hover:no-underline hover:text-purple-900 hover:font-medium' >Edit Resume</Link>
           </div>
 
           <div className='mr-7'>
-			<Link to = "/business" className='hover:no-underline cursor-pointer hover:text-purple-900 hover:font-medium' >Will Skill  Bussiness</Link>
+			<Link to = "/quiz" className='hover:no-underline cursor-pointer hover:text-purple-900 hover:font-medium' >Quiz</Link>
             {/* <p className='cursor-pointer hover:text-purple-800 hover:font-medium'>Tech Temple Bussiness</p> */}
           </div>
 

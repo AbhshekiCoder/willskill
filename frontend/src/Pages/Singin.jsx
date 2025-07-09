@@ -123,11 +123,7 @@ export default function () {
        
    
      	</form>
-		<div className='flex justify-between w-44 m-auto pt-8 items-center'>
-			<img className = 'h-9 w-8 cursor-pointer' src ={google} />
-			<img className = 'h-8 w-8 cursor-pointer rounded-circle' src ={facebook} style={{backgroundColor:'#1877F2'}} />
-			<img className = 'h-8 w-8 cursor-pointer' src ={apple}/>
-		</div>
+	
      </div>
 
      </div>
