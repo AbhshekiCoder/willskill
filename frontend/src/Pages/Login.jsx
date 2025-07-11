@@ -110,7 +110,7 @@ export default function Login() {
 	signInWithPopup(auth, provider).then(async(res)=>{
 		let credentials = GoogleAuthProvider.credentialFromResult(res);
 		let token = credentials.accessToken;
-		console.log(token)
+		console.log(res.user.displayName)
 let obj ={
 	name: res.user.displayName,
 	email: res.user.email,
@@ -143,7 +143,7 @@ let result = await axios.post(`${url}register_apps/register_apps`, obj);
 			}
 			else{
 				setType("success");
-				dispatch(userinfo(result.res.displayName.split(' ')[0]))
+				dispatch(userinfo(res.user.displayName.split(' ')[0]))
 				
 			
 			document.querySelector('.message').style.display = 'block';
