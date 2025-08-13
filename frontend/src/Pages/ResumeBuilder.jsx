@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState, useEffect } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
@@ -17,21 +17,11 @@ import {
   ChevronLeft,
   ChevronRight,
   CheckCircle2,
-  Copy,
   RotateCcw,
   Star,
   X,
 } from "lucide-react";
-
-/**
- * ULTIMATE RESUME BUILDER - ENHANCED UI
- * - Modern glassmorphism UI with smooth animations
- * - Improved AI integration with visual feedback
- * - Enhanced template previews with theme switching
- * - ATS score visualization with progress bar
- * - Better mobile responsiveness
- */
-
+import { Link } from "react-router-dom";
 const THEMES = [
   { id: "sky", name: "Sky", primary: "#0ea5e9", text: "#0f172a", subtle: "#e0f2fe" },
   { id: "violet", name: "Violet", primary: "#7c3aed", text: "#0f172a", subtle: "#ede9fe" },
@@ -95,9 +85,7 @@ function SectionHeader({ title, accent }) {
   );
 }
 
-// ---------- AI LAYER (Gemini integration) ----------
 async function aiComplete({ provider, apiKey, system, prompt }) {
-  // Use Gemini API
   return fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
     {
@@ -133,7 +121,6 @@ async function aiComplete({ provider, apiKey, system, prompt }) {
     });
 }
 
-// ---------- TEMPLATES ----------
 function TemplatePro({ data, theme }) {
   const accent = theme.primary;
   const techList = (data.technicalSkills || "").split(",").map((s) => s.trim()).filter(Boolean);
@@ -161,7 +148,6 @@ function TemplatePro({ data, theme }) {
       </div>
 
       <div className="grid grid-cols-3 gap-6">
-        {/* Left rail */}
         <div className="col-span-1 space-y-6">
           <div>
             <SectionHeader title="Skills" accent={accent} />
@@ -185,7 +171,6 @@ function TemplatePro({ data, theme }) {
           </div>
         </div>
 
-        {/* Main */}
         <div className="col-span-2 space-y-6">
           <div>
             <SectionHeader title="Summary" accent={accent} />
@@ -370,8 +355,7 @@ function TemplateCreative({ data, theme }) {
   );
 }
 
-// ---------- MAIN COMPONENT ----------
-export default function UltimateResumeBuilder() {
+export default function ResumeBuilder() {
   const [template, setTemplate] = useState("pro"); 
   const [themeId, setThemeId] = useState("sky");
   const theme = useMemo(() => THEMES.find((t) => t.id === themeId) || THEMES[0], [themeId]);
@@ -388,7 +372,6 @@ export default function UltimateResumeBuilder() {
 
   const previewRef = useRef(null);
 
-  // ------- helpers -------
   const update = (patch) => setData((d) => ({ ...d, ...patch }));
   const moveSection = (idx, dir) => {
     setSections((arr) => {
@@ -412,63 +395,38 @@ export default function UltimateResumeBuilder() {
     }
   };
 
-  // ------ Export (retina, multipage) ------
   const exportPDF = async () => {
     if (!previewRef.current) return;
     const node = previewRef.current;
 
-    // scale up for sharper text
-    const canvas = await html2canvas(node, { scale: 2, backgroundColor: "#ffffff" });
+    const scale = 2;
+    const canvas = await html2canvas(node, { 
+      scale,
+      backgroundColor: "#ffffff",
+      useCORS: true,
+    });
+    
     const imgData = canvas.toDataURL("image/png");
-    const pdf = new jsPDF({ orientation: "p", unit: "pt", format: "a4" });
+    const pdf = new jsPDF({
+      orientation: "portrait",
+      unit: "px",
+      format: [794, 1123]
+    });
 
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
+    const imgWidth = 794;
+    const imgHeight = 1123;
 
-    const ratio = canvas.width / canvas.height; // w/h
-    const imgWidth = pageWidth;
-    const imgHeight = imgWidth / ratio;
-
-    let y = 0;
-    let remaining = imgHeight;
-
-    // If the resume height exceeds one page, slice it
-    const pageCanvas = document.createElement("canvas");
-    const pageCtx = pageCanvas.getContext("2d");
-
-    while (remaining > 0) {
-      const sliceHeight = Math.min(pageHeight, remaining);
-      pageCanvas.width = canvas.width;
-      pageCanvas.height = (sliceHeight * canvas.width) / pageWidth; // scale slice to canvas px
-
-      pageCtx.drawImage(
-        canvas,
-        0,
-        (y * canvas.width) / pageWidth,
-        canvas.width,
-        pageCanvas.height,
-        0,
-        0,
-        canvas.width,
-        pageCanvas.height
-      );
-
-      const sliceData = pageCanvas.toDataURL("image/png");
-      const sliceDisplayHeight = sliceHeight; // pt
-
-      if (y > 0) pdf.addPage();
-      pdf.addImage(sliceData, "PNG", 0, 0, pageWidth, sliceDisplayHeight);
-
-      y += sliceHeight;
-      remaining -= sliceHeight;
-    }
-
+    pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
     pdf.save(`${(data.name || "resume").replace(/\s+/g, "_")}.pdf`);
   };
 
   const exportPNG = async () => {
     if (!previewRef.current) return;
-    const canvas = await html2canvas(previewRef.current, { scale: 2, backgroundColor: "#ffffff" });
+    const canvas = await html2canvas(previewRef.current, { 
+      scale: 2, 
+      backgroundColor: "#ffffff",
+      useCORS: true
+    });
     const url = canvas.toDataURL("image/png");
     const a = document.createElement("a");
     a.href = url;
@@ -500,7 +458,6 @@ export default function UltimateResumeBuilder() {
     reader.readAsText(file);
   };
 
-  // ------ ATS score (simple keyword match) ------
   const computeATS = () => {
     const text = `${data.summary}\n${data.projects}\n${data.technicalSkills}\n${data.education}`.toLowerCase();
     const words = (jd || "").toLowerCase().match(/[a-z0-9+#.\-]{3,}/g) || [];
@@ -511,7 +468,6 @@ export default function UltimateResumeBuilder() {
     setAts({ score, missing });
   };
 
-  // ------ AI Actions ------
   const runAI = async (kind) => {
     setBusy(true);
     setBusyAction(kind);
@@ -542,7 +498,6 @@ export default function UltimateResumeBuilder() {
       if (kind === "tailor") {
         prompt = `Tailor the resume summary and 6-8 bullets for the following job description. Keep it ATS-friendly.\n\nJD:\n${jd}\n\nCurrent Summary:\n${data.summary}\n\nCurrent Projects:\n${data.projects}`;
         const out = await aiComplete({ provider: aiProvider, apiKey, system, prompt });
-        // naive split: first paragraph to summary, rest to projects
         const [first, ...rest] = String(out).split(/\n\n+/);
         update({ summary: first?.trim() || data.summary, projects: rest.join("\n").trim() || data.projects });
         setAiStatus({ type: "success", message: "Resume tailored to JD!" });
@@ -559,16 +514,15 @@ export default function UltimateResumeBuilder() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      {/* Top Bar */}
       <div className="sticky top-0 z-30 backdrop-blur-lg bg-white/80 border-b border-black/5 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-indigo-600" />
             <span className="font-bold text-xl bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">
-              Ultimate Resume Builder
+              <Link to="/">Ultimate Resume Builder</Link>
             </span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-center gap-2">
             <button 
               onClick={exportPNG} 
               className="px-3 py-1.5 rounded-lg border bg-white hover:bg-gray-50 text-sm flex items-center gap-2 shadow-sm transition-all hover:shadow"
@@ -597,10 +551,10 @@ export default function UltimateResumeBuilder() {
       </div>
 
       <div className="max-w-7xl mx-auto p-4 grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* LEFT: Controls */}
         <motion.div 
           layout 
-          className="bg-white/90 backdrop-blur-sm rounded-2xl border border-white/20 shadow-lg p-4 lg:p-6"
+          className="bg-white/90 backdrop-blur-sm rounded-2xl border border-white/20 shadow-lg p-4 lg:p-6 overflow-y-auto"
+          style={{ maxHeight: 'calc(100vh - 100px)' }}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
@@ -610,7 +564,7 @@ export default function UltimateResumeBuilder() {
               <LayoutTemplate className="h-5 w-5 text-indigo-600" />
               <span className="font-semibold">Template</span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               {[
                 { id: "pro", label: "Professional" },
                 { id: "minimal", label: "Minimal" },
@@ -664,7 +618,6 @@ export default function UltimateResumeBuilder() {
             </div>
           </div>
 
-          {/* Form */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input label="Full Name" value={data.name} onChange={(v) => update({ name: v })} />
             <Input label="Title" value={data.title} onChange={(v) => update({ title: v })} />
@@ -679,7 +632,6 @@ export default function UltimateResumeBuilder() {
             <Textarea label="Declaration" value={data.conclusion} onChange={(v) => update({ conclusion: v })} rows={2} />
           </div>
 
-          {/* Links */}
           <div className="mt-4">
             <div className="flex items-center justify-between mb-2">
               <span className="font-medium">Links</span>
@@ -732,7 +684,6 @@ export default function UltimateResumeBuilder() {
             </div>
           </div>
 
-          {/* Sections order */}
           <div className="mt-6">
             <div className="flex items-center gap-2 mb-2">
               <Eye className="h-5 w-5 text-indigo-600" /> <span className="font-medium">Sections Order</span>
@@ -764,14 +715,13 @@ export default function UltimateResumeBuilder() {
             </div>
           </div>
 
-          {/* AI Panel */}
           <motion.div 
             className="mt-8 p-4 rounded-2xl border bg-gradient-to-br from-indigo-50/50 to-purple-50/50"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
               <div className="flex items-center gap-2">
                 <Bot className="h-5 w-5 text-indigo-600" /> 
                 <span className="font-semibold">AI Assistant</span>
@@ -781,7 +731,7 @@ export default function UltimateResumeBuilder() {
                 <input
                   type="password"
                   placeholder="API Key"
-                  className="border rounded-lg px-3 py-1.5 text-sm w-56 focus:ring-2 focus:ring-indigo-200"
+                  className="border rounded-lg px-3 py-1.5 text-sm w-full md:w-56 focus:ring-2 focus:ring-indigo-200"
                   value={apiKey}
                   onChange={(e) => setApiKey(e.target.value)}
                 />
@@ -857,7 +807,7 @@ export default function UltimateResumeBuilder() {
                 onChange={setJd} 
                 rows={5} 
               />
-              <div className="flex items-center gap-2 mt-2 flex-wrap">
+              <div className="flex flex-wrap items-center gap-2 mt-2">
                 <button 
                   className="px-3 py-1.5 rounded-lg border hover:bg-gray-50 text-sm flex items-center gap-2 transition-all"
                   onClick={computeATS}
@@ -894,7 +844,6 @@ export default function UltimateResumeBuilder() {
           </motion.div>
         </motion.div>
 
-        {/* RIGHT: Live Preview */}
         <motion.div 
           layout 
           className="space-y-3"
@@ -913,19 +862,21 @@ export default function UltimateResumeBuilder() {
               </div>
               <div className="text-xs opacity-60">A4 • 794×1123 px (print ready)</div>
             </div>
-            <div className="flex justify-center">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={`${template}-${themeId}-${data.name}`}
-                  ref={previewRef}
-                  initial={{ opacity: 0, y: 20, scale: 0.98 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.35 }}
-                >
-                  {renderByTemplate()}
-                </motion.div>
-              </AnimatePresence>
+            <div className="overflow-x-auto py-4">
+              <div className="flex justify-center min-w-max">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={`${template}-${themeId}-${data.name}`}
+                    ref={previewRef}
+                    initial={{ opacity: 0, y: 20, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.35 }}
+                  >
+                    {renderByTemplate()}
+                  </motion.div>
+                </AnimatePresence>
+              </div>
             </div>
           </motion.div>
 
@@ -940,7 +891,6 @@ export default function UltimateResumeBuilder() {
   );
 }
 
-// ---------- UI PRIMITIVES ----------
 function Input({ label, value, onChange, type = "text" }) {
   return (
     <label className="block">
@@ -990,7 +940,6 @@ function AIButton({ children, onClick, icon, busy, busyAction, action }) {
   );
 }
 
-// ---------- QUICK STARTS ----------
 function QuickStarts({ onPick, theme }) {
   const presets = [
     {

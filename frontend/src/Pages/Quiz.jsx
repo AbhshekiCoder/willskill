@@ -1,17 +1,19 @@
 // src/components/Quiz.jsx
 import React, { useEffect, useState, useRef } from 'react';
-import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
 import { Loader } from 'rsuite';
 import { motion } from 'framer-motion';
 import Confetti from 'react-confetti';
 import { FiClock, FiAward, FiHome, FiRepeat, FiLogOut, FiMic, FiBook } from 'react-icons/fi';
 import { FaCheckCircle, FaTimesCircle, FaVolumeUp } from 'react-icons/fa';
-import { Bar, Pie } from 'react-chartjs-2';
-
+import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement } from 'chart.js';
+import { Pie, Bar } from 'react-chartjs-2';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const GEMINI_KEY = "AIzaSyCpgaSyevRj5gq5Cz4rsN_4ro2OFOrArQk"
+// Register Chart.js components
+ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement);
+
+const GEMINI_KEY = "AIzaSyCpgaSyevRj5gq5Cz4rsN_4ro2OFOrArQk";
 
 export default function Quiz() {
   const navigate = useNavigate();
@@ -19,26 +21,27 @@ export default function Quiz() {
   // UI / quiz state
   const [topics, setTopics] = useState([]);
   const [selectedTopic, setSelectedTopic] = useState(null);
-  const [quiz, setQuiz] = useState([]); // array of {question, options[], answer, difficulty}
+  const [quiz, setQuiz] = useState([]);
   const [questionIndex, setQuestionIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState(15);
   const [quizStarted, setQuizStarted] = useState(false);
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [selectedOption, setSelectedOption] = useState(null);
-  const [explanations, setExplanations] = useState({}); // map idx -> explanation
+  const [explanations, setExplanations] = useState({});
   const [recommendations, setRecommendations] = useState(null);
   const [rivalScore, setRivalScore] = useState(0);
   const [difficulty, setDifficulty] = useState('medium');
   const [performanceData, setPerformanceData] = useState(null);
   const [listening, setListening] = useState(false);
   const [speaking, setSpeaking] = useState(false);
-
-  // tracking answers correctly per question
-  const [answers, setAnswers] = useState([]); // {index, selected, correct, timeLeft, difficulty}
-
-  // sizing for confetti
-  const [windowSize, setWindowSize] = useState({ width: window.innerWidth, height: window.innerHeight });
+  const [answers, setAnswers] = useState([]);
+  const [score, setScore] = useState(0);
+  const [windowSize, setWindowSize] = useState({ 
+    width: window.innerWidth, 
+    height: window.innerHeight 
+  });
+  const [correctAnswers, setCorrectAnswers] = useState([]);
 
   // refs
   const timerRef = useRef(null);
@@ -49,8 +52,7 @@ export default function Quiz() {
   const questionCount = quiz.length;
   const progressPercentage = questionCount ? (questionIndex / questionCount) * 100 : 0;
 
-  // Helper function to get Gemini response
-  /**  
+  // Gemini Helper function
   const getGeminiResponse = async (prompt) => {
     if (!GEMINI_KEY) return null;
     try {
@@ -63,48 +65,55 @@ export default function Quiz() {
       return null;
     }
   };
-  */
 
   useEffect(() => {
     isMounted.current = true;
-
-    // sample topics
     setTopics(['Science', 'History', 'Programming', 'Mathematics', 'Geography', 'Literature']);
     setLoading(false);
 
-    const handleResize = () => setWindowSize({ width: window.innerWidth, height: window.innerHeight });
+    const handleResize = () => setWindowSize({ 
+      width: window.innerWidth, 
+      height: window.innerHeight 
+    });
+    
     window.addEventListener('resize', handleResize);
 
-    // speech synthesis availability
-    if ('speechSynthesis' in window) synthRef.current = window.speechSynthesis;
+    if ('speechSynthesis' in window) {
+      synthRef.current = window.speechSynthesis;
+    }
 
     return () => {
       window.removeEventListener('resize', handleResize);
       clearTimers();
       isMounted.current = false;
-      if (synthRef.current && synthRef.current.speaking) synthRef.current.cancel();
+      stopAllSpeech();
+      stopListening();
     };
-    
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  
-  // timer effect
+
+  // Stop speech when question changes
+  useEffect(() => {
+    return () => {
+      if (synthRef.current?.speaking) {
+        synthRef.current.cancel();
+        setSpeaking(false);
+      }
+    };
+  }, [questionIndex]);
+
   useEffect(() => {
     if (!quizStarted || quizCompleted) return;
     if (questionIndex >= questionCount) return;
 
     if (timeLeft > 0) {
-      timerRef.current = setTimeout(() => setTimeLeft((p) => p - 1), 1000);
+      timerRef.current = setTimeout(() => setTimeLeft(p => p - 1), 1000);
     } else {
-      // time up for current question
       handleTimeUp();
     }
 
     return () => clearTimeout(timerRef.current);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeLeft, quizStarted, questionIndex, quizCompleted, questionCount]);
 
-  // when quiz array or questionIndex changes, set up current question defaults
   useEffect(() => {
     if (quizStarted && questionIndex < questionCount) {
       setSelectedOption(null);
@@ -116,62 +125,28 @@ export default function Quiz() {
     if (timerRef.current) clearTimeout(timerRef.current);
   };
 
-
-  // ---- Question generation ----
-  const generateQuiz = async (topic) => {
-    setLoading(true);
-    try {
-      if (GEMINI_KEY) {
-        const genAI = new GoogleGenerativeAI(GEMINI_KEY);
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-        const prompt = `Generate 10 multiple-choice questions about "${topic}". 
-Return exactly in this JSON format (no extra text):
-{"questions":[{"question":"...","options":["A","B","C","D"],"answer":"<one>","difficulty":"easy|medium|hard"}, ...]}`;
-
-        const result = await model.generateContent(prompt);
-        const text = result.response.text();
-        console.log(text)
-
-        let parsed = null;
-        try {
-          parsed = JSON.parse(text);
-        } catch (err) {
-          const match = text.match(/\{[\s\S]*\}/);
-          if (match) parsed = JSON.parse(match[0]);
-        }
-
-        if (parsed?.questions && parsed.questions.length) {
-          const q = parsed.questions.slice(0, 10).map(normalizeQuestion);
-          setQuiz(q);
-          prefetchExplanations(q);
-        } else {
-          setQuiz(getFallbackForTopic(topic));
-        }
-      } else {
-        // Fallback if no Gemini key
-        setQuiz(getFallbackForTopic(topic));
-      }
-    } catch (err) {
-      console.error("generateQuiz error", err);
-      setQuiz(getFallbackForTopic(topic));
-    } finally {
-      if (isMounted.current) setLoading(false);
+  const stopAllSpeech = () => {
+    if (synthRef.current?.speaking) {
+      synthRef.current.cancel();
+      setSpeaking(false);
     }
   };
 
   const normalizeQuestion = (q) => {
-    // ensure format present
-    return {
+    const normalized = {
       question: q.question?.trim?.() || (q.prompt || 'Question'),
       options: q.options?.slice?.(0, 4) || q.choices || [],
       answer: q.answer || q.correct || (q.options?.[0] ?? ''),
       difficulty: q.difficulty || q.level || 'medium'
     };
+    
+    // Store correct answer
+    setCorrectAnswers(prev => [...prev, normalized.answer]);
+    
+    return normalized;
   };
 
   const getFallbackForTopic = (topic) => {
-    // small local pool per topic
     const pool = {
       Science: [
         { question: 'What is the chemical symbol for Gold', options: ['Go', 'Gd', 'Au', 'Ag'], answer: 'Au', difficulty: 'easy' },
@@ -200,7 +175,55 @@ Return exactly in this JSON format (no extra text):
     return (pool[topic] || pool['Science']).slice(0, 10);
   };
 
-  // prefetch explanations using Gemini
+  const generateQuiz = async (topic) => {
+    setLoading(true);
+    setCorrectAnswers([]);
+    try {
+      if (GEMINI_KEY) {
+        const genAI = new GoogleGenerativeAI(GEMINI_KEY);
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+        const prompt = `Generate 10 multiple-choice questions about "${topic}". 
+Return exactly in this JSON format (no extra text):
+{"questions":[{"question":"...","options":["A","B","C","D"],"answer":"<one>","difficulty":"easy|medium|hard"}, ...]}`;
+
+        const result = await model.generateContent(prompt);
+        const text = result.response.text();
+        console.log(text);
+
+        let parsed = null;
+        try {
+          parsed = JSON.parse(text);
+        } catch (err) {
+          const match = text.match(/\{[\s\S]*\}/);
+          if (match) parsed = JSON.parse(match[0]);
+        }
+
+        if (parsed?.questions && parsed.questions.length) {
+          const q = parsed.questions.slice(0, 10).map(normalizeQuestion);
+          setQuiz(q);
+          // Prefetch explanations in background
+          prefetchExplanations(q);
+        } else {
+          const fallback = getFallbackForTopic(topic);
+          setQuiz(fallback);
+          setCorrectAnswers(fallback.map(q => q.answer));
+        }
+      } else {
+        const fallback = getFallbackForTopic(topic);
+        setQuiz(fallback);
+        setCorrectAnswers(fallback.map(q => q.answer));
+      }
+    } catch (err) {
+      console.error("generateQuiz error", err);
+      const fallback = getFallbackForTopic(topic);
+      setQuiz(fallback);
+      setCorrectAnswers(fallback.map(q => q.answer));
+    } finally {
+      if (isMounted.current) setLoading(false);
+    }
+  };
+
   const prefetchExplanations = async (questions) => {
     if (!GEMINI_KEY) return;
     try {
@@ -221,7 +244,6 @@ Return exactly in this JSON format (no extra text):
     }
   };
 
-  // ---- Quiz flow handlers ----
   const selectTopic = (topic) => setSelectedTopic(topic);
 
   const startQuiz = async () => {
@@ -230,7 +252,7 @@ Return exactly in this JSON format (no extra text):
     await generateQuiz(selectedTopic);
     setAnswers([]);
     setQuestionIndex(0);
-    setScoreState(0);
+    setScore(0);
     setRivalScore(0);
     setDifficulty('medium');
     setPerformanceData(null);
@@ -240,25 +262,25 @@ Return exactly in this JSON format (no extra text):
     setLoading(false);
   };
 
-  // score kept for display
-  const [score, setScoreState] = useState(0);
-  const setScore = (v) => setScoreState(v);
-
   const handleOptionSelect = async (option) => {
     if (!quizStarted || quizCompleted) return;
-    if (selectedOption !== null) return; // already answered current question
+    if (selectedOption !== null) return;
     if (questionIndex >= questionCount) return;
 
     clearTimers();
     setSelectedOption(option);
 
     const current = quiz[questionIndex];
-    const correct = option === current.answer;
+    const normalizedOption = option.trim().toLowerCase();
+    const normalizedAnswer = current.answer.trim().toLowerCase();
+    const correct = normalizedOption === normalizedAnswer;
+    
+    // Update score immediately
     if (correct) {
-      const timeBonus = Math.floor(timeLeft / 3); // as earlier
-      setScore((prev) => prev + 10 + timeBonus);
+      const timeBonus = Math.floor(timeLeft / 3);
+      setScore(prev => prev + 10 + timeBonus);
     }
-    // record answer
+
     setAnswers((prev) => [...prev, {
       index: questionIndex,
       selected: option,
@@ -267,181 +289,33 @@ Return exactly in this JSON format (no extra text):
       difficulty: current.difficulty || difficulty
     }]);
 
-    // update difficulty
     updateDifficulty(correct);
 
-    // explanation: use prefetch cache if present; else generate quick explanation
+    // Get explanation from cache or generate
     let expl = explanations[questionIndex];
     if (!expl) {
       expl = await getExplanation(current.question, current.answer);
-      // save for this index
       setExplanations((prev) => ({ ...prev, [questionIndex]: expl }));
     }
-    // speak explanation
-    speakText(expl);
-
-    // rival turn simulated
+    
+    const currentIndex = questionIndex;
+    setTimeout(() => {
+      if (isMounted.current && currentIndex === questionIndex) {
+        speakText(expl);
+      }
+    }, 500);
+    
     simulateRivalTurn(correct);
 
-    // move to next question after small delay
     setTimeout(() => {
-      if (questionIndex < questionCount - 1) setQuestionIndex((p) => p + 1);
-      else endQuizPeriod();
+      if (questionIndex < questionCount - 1) {
+        setQuestionIndex(p => p + 1);
+      } else {
+        endQuizPeriod();
+      }
     }, 1400);
   };
 
-  const handleTimeUp = () => {
-    // treat as incorrect empty selection
-    if (!quizStarted || quizCompleted) return;
-    setSelectedOption('');
-    setAnswers((prev) => [...prev, {
-      index: questionIndex,
-      selected: '',
-      correct: false,
-      timeLeft: 0,
-      difficulty: quiz[questionIndex]?.difficulty || difficulty
-    }]);
-    updateDifficulty(false);
-    simulateRivalTurn(false);
-    setTimeout(() => {
-      if (questionIndex < questionCount - 1) setQuestionIndex((p) => p + 1);
-      else endQuizPeriod();
-    }, 1200);
-  };
-
-  const endQuizPeriod = async () => {
-    clearTimers();
-    setQuizCompleted(true);
-    setQuizStarted(false);
-
-    // compute performance
-    const performance = { correct: 0, incorrect: 0, byDifficulty: { easy: 0, medium: 0, hard: 0 } };
-    answers.forEach((ans) => {
-      if (ans.correct) {
-        performance.correct += 1;
-        const diff = ans.difficulty || 'medium';
-        performance.byDifficulty[diff] = (performance.byDifficulty[diff] || 0) + 1;
-      } else {
-        performance.incorrect += 1;
-      }
-    });
-
-    setPerformanceData(performance);
-
-    // generate recommendations
-    try {
-      const rec = await getRecommendations(performance);
-      setRecommendations(rec);
-    } catch (err) {
-      setRecommendations(`Review concepts related to ${selectedTopic}.`);
-    }
-  };
-
-  const resetQuiz = () => {
-    setQuiz([]);
-    setSelectedTopic(null);
-    setAnswers([]);
-    setPerformanceData(null);
-    setRecommendations(null);
-    setQuizCompleted(false);
-    setQuizStarted(false);
-    setScoreState(0);
-    setRivalScore(0);
-    setSelectedOption(null);
-  };
-
-  const logout = () => {
-    // placeholder: clear auth / tokens as needed
-    navigate('/login');
-  };
-
-  // ---- Rival simulation ----
-  const simulateRivalTurn = (userWasCorrect) => {
-    // simple logic: if user correct, rival has small chance to score; if user incorrect, rival more likely to score
-    const base = Math.floor(Math.random() * 5); // 0..4
-    const extra = userWasCorrect ? Math.floor(Math.random() * 3) : Math.floor(Math.random() * 6);
-    setRivalScore((prev) => prev + base + extra);
-  };
-
-  // ---- Speech features ----
-  const speakText = (text) => {
-    if (!synthRef.current) return;
-    if (!text) return;
-    try {
-      if (synthRef.current.speaking) synthRef.current.cancel();
-      const u = new SpeechSynthesisUtterance(text);
-      u.onstart = () => setSpeaking(true);
-      u.onend = () => setSpeaking(false);
-      synthRef.current.speak(u);
-    } catch (err) {
-      console.warn('speakText err', err);
-    }
-  };
-
-  const startListening = () => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      alert('Speech Recognition not supported in this browser.');
-      return;
-    }
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'en-US';
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
-
-    recognition.onresult = (ev) => {
-      const transcript = ev.results[0][0].transcript.trim();
-      handleSpeechAnswer(transcript);
-    };
-    recognition.onend = () => setListening(false);
-    recognition.onerror = (e) => {
-      console.error('recognition error', e);
-      setListening(false);
-    };
-    recognition.start();
-    recognitionRef.current = recognition;
-    setListening(true);
-  };
-
-  const stopListening = () => {
-    if (recognitionRef.current) {
-      recognitionRef.current.stop();
-      recognitionRef.current = null;
-      setListening(false);
-    }
-  };
-
-  const handleSpeechAnswer = (text) => {
-    if (!quizStarted || questionIndex >= questionCount) return;
-    const normalized = text.toLowerCase().trim();
-
-    // allow A/B/C/D letters
-    const letterMatch = normalized.match(/^[a-d]$/i) || normalized.match(/^(option )?([a-d])$/i);
-    if (letterMatch) {
-      const letter = letterMatch[0].slice(-1).toUpperCase();
-      const idx = letter.charCodeAt(0) - 65;
-      const opt = quiz[questionIndex]?.options?.[idx];
-      if (opt) {
-        handleOptionSelect(opt);
-        return;
-      }
-    }
-
-    // match exact option text (case-insensitive)
-    const matched = quiz[questionIndex]?.options?.find(opt => opt.toLowerCase().trim() === normalized);
-    if (matched) {
-      handleOptionSelect(matched);
-      return;
-    }
-
-    // fuzzy substring match only if exact not found
-    const substring = quiz[questionIndex]?.options?.find(opt => opt.toLowerCase().includes(normalized) || normalized.includes(opt.toLowerCase()));
-    if (substring) {
-      handleOptionSelect(substring);
-    }
-  };
-
-  // ---- Gemini helper functions ----
   const getExplanation = async (questionText, correctAnswer) => {
     if (explanations && explanations[questionIndex]) return explanations[questionIndex];
     if (!GEMINI_KEY) {
@@ -454,6 +328,76 @@ Return exactly in this JSON format (no extra text):
     } catch (err) {
       console.error('getExplanation err', err);
       return `Correct: ${correctAnswer}.`;
+    }
+  };
+
+  const handleTimeUp = () => {
+    if (!quizStarted || quizCompleted) return;
+    setSelectedOption('');
+    setAnswers((prev) => [...prev, {
+      index: questionIndex,
+      selected: '',
+      correct: false,
+      timeLeft: 0,
+      difficulty: quiz[questionIndex]?.difficulty || difficulty
+    }]);
+    updateDifficulty(false);
+    simulateRivalTurn(false);
+    setTimeout(() => {
+      if (questionIndex < questionCount - 1) setQuestionIndex(p => p + 1);
+      else endQuizPeriod();
+    }, 1200);
+  };
+
+  const updateDifficulty = (correct) => {
+    setDifficulty((prev) => {
+      if (correct) {
+        if (prev === 'easy') return 'medium';
+        if (prev === 'medium') return 'hard';
+        return 'hard';
+      } else {
+        if (prev === 'hard') return 'medium';
+        if (prev === 'medium') return 'easy';
+        return 'easy';
+      }
+    });
+  };
+
+  const simulateRivalTurn = (userWasCorrect) => {
+    const base = Math.floor(Math.random() * 5);
+    const extra = userWasCorrect ? Math.floor(Math.random() * 3) : Math.floor(Math.random() * 6);
+    setRivalScore((prev) => prev + base + extra);
+  };
+
+  const endQuizPeriod = async () => {
+    clearTimers();
+    stopAllSpeech();
+    setQuizCompleted(true);
+    setQuizStarted(false);
+
+    const performance = { 
+      correct: 0, 
+      incorrect: 0, 
+      byDifficulty: { easy: 0, medium: 0, hard: 0 } 
+    };
+    
+    answers.forEach((ans) => {
+      if (ans.correct) {
+        performance.correct += 1;
+        const diff = ans.difficulty || 'medium';
+        performance.byDifficulty[diff] = (performance.byDifficulty[diff] || 0) + 1;
+      } else {
+        performance.incorrect += 1;
+      }
+    });
+
+    setPerformanceData(performance);
+
+    try {
+      const rec = await getRecommendations(performance);
+      setRecommendations(rec);
+    } catch (err) {
+      setRecommendations(`Review concepts related to ${selectedTopic}.`);
     }
   };
 
@@ -471,22 +415,139 @@ Return exactly in this JSON format (no extra text):
     }
   };
 
-  // update difficulty simple policy
-  const updateDifficulty = (correct) => {
-    setDifficulty((prev) => {
-      if (correct) {
-        if (prev === 'easy') return 'medium';
-        if (prev === 'medium') return 'hard';
-        return 'hard';
-      } else {
-        if (prev === 'hard') return 'medium';
-        if (prev === 'medium') return 'easy';
-        return 'easy';
-      }
-    });
+  const resetQuiz = () => {
+    setQuiz([]);
+    setSelectedTopic(null);
+    setAnswers([]);
+    setPerformanceData(null);
+    setRecommendations(null);
+    setQuizCompleted(false);
+    setQuizStarted(false);
+    setScore(0);
+    setRivalScore(0);
+    setSelectedOption(null);
+    stopAllSpeech();
   };
-  
-  // ---- Render ----
+
+  const logout = () => {
+    navigate('/login');
+  };
+
+  const speakText = (text) => {
+    if (!synthRef.current) return;
+    if (!text) return;
+    try {
+      stopAllSpeech();
+      const u = new SpeechSynthesisUtterance(text);
+      u.onstart = () => setSpeaking(true);
+      u.onend = () => setSpeaking(false);
+      synthRef.current.speak(u);
+    } catch (err) {
+      console.warn('speakText err', err);
+    }
+  };
+
+  const startListening = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert('Speech Recognition not supported in this browser.');
+      return;
+    }
+    
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+    }
+    
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onresult = (ev) => {
+      const transcript = ev.results[0][0].transcript.trim();
+      handleSpeechAnswer(transcript);
+    };
+    
+    recognition.onend = () => setListening(false);
+    
+    recognition.onerror = (e) => {
+      console.error('recognition error', e);
+      setListening(false);
+    };
+    
+    try {
+      recognition.start();
+      recognitionRef.current = recognition;
+      setListening(true);
+      
+      // Auto-stop after 5 seconds
+      setTimeout(() => {
+        if (recognitionRef.current === recognition) {
+          recognition.stop();
+          setListening(false);
+        }
+      }, 5000);
+    } catch (err) {
+      console.error('Failed to start speech recognition:', err);
+      setListening(false);
+    }
+  };
+
+  const stopListening = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      recognitionRef.current = null;
+      setListening(false);
+    }
+  };
+
+  const handleSpeechAnswer = (text) => {
+    if (!quizStarted || questionIndex >= questionCount) return;
+    const normalizedText = text.toLowerCase().trim();
+    const currentQuestion = quiz[questionIndex];
+    
+    // 1. Try matching by letter (A, B, C, D)
+    const letterMatch = normalizedText.match(/^[a-d]$/i);
+    if (letterMatch) {
+      const letter = letterMatch[0].toUpperCase();
+      const idx = letter.charCodeAt(0) - 65;
+      if (idx < currentQuestion.options.length) {
+        handleOptionSelect(currentQuestion.options[idx]);
+        return;
+      }
+    }
+
+    // 2. Try matching entire option text
+    const exactMatch = currentQuestion.options.find(
+      opt => opt.toLowerCase().trim() === normalizedText
+    );
+    
+    if (exactMatch) {
+      handleOptionSelect(exactMatch);
+      return;
+    }
+
+    // 3. Try partial matching
+    const partialMatch = currentQuestion.options.find(
+      opt => opt.toLowerCase().includes(normalizedText) ||
+             normalizedText.includes(opt.toLowerCase())
+    );
+    
+    if (partialMatch) {
+      handleOptionSelect(partialMatch);
+      return;
+    }
+
+    // 4. Try matching first word
+    const firstWordMatch = currentQuestion.options.find(
+      opt => opt.toLowerCase().split(' ')[0] === normalizedText.split(' ')[0]
+    );
+    
+    if (firstWordMatch) {
+      handleOptionSelect(firstWordMatch);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-50 to-blue-50">
@@ -510,12 +571,27 @@ Return exactly in this JSON format (no extra text):
             </div>
             <div className="flex items-center gap-4">
               {quizStarted && (
-                <button
-                  onClick={() => { if (listening) stopListening(); else startListening(); }}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition duration-200 ${listening ? 'bg-red-100 text-red-600' : 'bg-purple-100 text-purple-600 hover:bg-purple-200'}`}
-                >
-                  <FiMic /> {listening ? 'Listening...' : 'Voice Answer'}
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => { if (listening) stopListening(); else startListening(); }}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition duration-200 ${
+                      listening 
+                        ? 'animate-pulse bg-blue-500 text-white' 
+                        : 'bg-purple-100 text-purple-600 hover:bg-purple-200'
+                    }`}
+                  >
+                    <FiMic /> 
+                    {listening ? 'Listening...' : 'Voice Answer'}
+                  </button>
+                  {speaking && (
+                    <button
+                      onClick={stopAllSpeech}
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg font-medium bg-red-100 text-red-600"
+                    >
+                      Stop Speaking
+                    </button>
+                  )}
+                </div>
               )}
               <button onClick={logout} className="flex items-center gap-2 text-purple-600 hover:text-purple-800 px-4 py-2 rounded-lg font-medium transition duration-200">
                 <FiLogOut /> Log out
@@ -538,7 +614,7 @@ Return exactly in this JSON format (no extra text):
             <p className="text-lg text-gray-600 mb-8 max-w-lg mx-auto">Select a topic to start your personalized AI-supported quiz</p>
 
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
-              {topics.map((t, i) => (
+              {topics.map((t) => (
                 <motion.div key={t} whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={() => selectTopic(t)} className="cursor-pointer">
                   <div className={`p-6 rounded-xl border-2 ${selectedTopic === t ? 'border-purple-500 bg-purple-50' : 'border-gray-200 hover:border-purple-300'} transition-colors duration-200`}>
                     <div className="text-xl font-semibold text-gray-800">{t}</div>
@@ -581,27 +657,47 @@ Return exactly in this JSON format (no extra text):
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               {quiz[questionIndex].options.map((option, idx) => {
                 const isSelected = selectedOption !== null && option === selectedOption;
-                const isAnswer = option === quiz[questionIndex].answer;
+                const isCorrect = option === quiz[questionIndex].answer;
                 const baseClass = 'p-5 border-2 rounded-xl cursor-pointer transition-all duration-200';
-                const dynamicClass = selectedOption === null
-                  ? 'hover:border-purple-300 hover:bg-purple-50 border-gray-200'
-                  : isAnswer
-                    ? 'border-green-400 bg-green-50'
-                    : isSelected
-                      ? 'border-red-400 bg-red-50'
-                      : 'border-gray-200';
+                
+                let dynamicClass = 'border-gray-200';
+                let icon = null;
+                
+                if (selectedOption !== null) {
+                  if (isCorrect) {
+                    dynamicClass = 'border-green-400 bg-green-50';
+                    icon = <FaCheckCircle className="text-green-500 text-xl" />;
+                  } else if (isSelected) {
+                    dynamicClass = 'border-red-400 bg-red-50';
+                    icon = <FaTimesCircle className="text-red-500 text-xl" />;
+                  }
+                } else {
+                  dynamicClass = 'hover:border-purple-300 hover:bg-purple-50 border-gray-200';
+                }
+                
                 return (
-                  <motion.div key={idx} whileHover={{ scale: selectedOption ? 1 : 1.02 }} whileTap={{ scale: selectedOption ? 1 : 0.98 }} onClick={() => handleOptionSelect(option)} className={`${baseClass} ${dynamicClass}`}>
+                  <motion.div 
+                    key={idx} 
+                    whileHover={{ scale: selectedOption ? 1 : 1.02 }} 
+                    whileTap={{ scale: selectedOption ? 1 : 0.98 }} 
+                    onClick={() => handleOptionSelect(option)} 
+                    className={`${baseClass} ${dynamicClass}`}
+                    disabled={selectedOption !== null}
+                  >
                     <div className="flex items-center">
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center mr-4 ${selectedOption === null ? 'bg-purple-100 text-purple-700' : isAnswer ? 'bg-green-100 text-green-700' : isSelected ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700'}`}>
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center mr-4 ${
+                        selectedOption === null 
+                          ? 'bg-purple-100 text-purple-700' 
+                          : isCorrect 
+                            ? 'bg-green-100 text-green-700' 
+                            : isSelected 
+                              ? 'bg-red-100 text-red-700' 
+                              : 'bg-gray-100 text-gray-700'
+                      }`}>
                         <span className="font-bold">{String.fromCharCode(65 + idx)}</span>
                       </div>
                       <span className="font-medium">{option}</span>
-                      {selectedOption !== null && (
-                        <div className="ml-auto">
-                          {isAnswer ? <FaCheckCircle className="text-green-500 text-xl" /> : isSelected ? <FaTimesCircle className="text-red-500 text-xl" /> : null}
-                        </div>
-                      )}
+                      {icon && <div className="ml-auto">{icon}</div>}
                     </div>
                   </motion.div>
                 );
