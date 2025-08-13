@@ -40,9 +40,7 @@ export default function () {
                if(result.data.role == "teacher"){
                 Navigate('/teachers')
                }
-               if(result.data.role == "admin"){
-                Navigate('/admin')
-               }
+               
  
  
             },2000)

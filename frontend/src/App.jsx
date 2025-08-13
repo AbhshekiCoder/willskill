@@ -29,7 +29,7 @@ import Courses from './Pages/Courses'
 import Register from './Pages/Register'
 import dotenv from 'dotenv'
 import TeacherDashboard from './Pages/TeacherDashboard'
-import Admin from './Pages/Admin'
+
 import { useDispatch } from 'react-redux'
 import { userinfo } from './features/userinfo'
 import Video from './Pages/Video'
@@ -149,7 +149,7 @@ for (const key in object) {
     <Route element = {<PrivateRoute/>}>
     <Route path = "/Dashboard" element={<Dashboard/>}></Route>
     <Route path='/teacher' element={<TeacherDashboard/>}></Route>
-    <Route path='/admin' element={<Admin/>}></Route>
+  
     </Route>
      <Route element = {<PublicRoute/>}>
      <Route path = "/login" element={<Login/>}></Route>
