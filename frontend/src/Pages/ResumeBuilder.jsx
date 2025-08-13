@@ -1,528 +1,1067 @@
-import { useState, useRef } from 'react';
-import { FaDownload, FaArrowRight, FaArrowLeft, FaPhone, FaEnvelope, FaMapMarkerAlt } from 'react-icons/fa';
-import { IoIosArrowForward, IoIosArrowBack } from 'react-icons/io';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
+import React, { useMemo, useRef, useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
+import {
+  Sparkles,
+  Download,
+  Wand2,
+  RefreshCw,
+  Upload,
+  FileJson,
+  Palette,
+  Bot,
+  LayoutTemplate,
+  Eye,
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  CheckCircle2,
+  Copy,
+  RotateCcw,
+  Star,
+  X,
+} from "lucide-react";
 
-const ResumeBuilder = () => {
-  const [formData, setFormData] = useState({
-    name: '',
-    title: '',
-    address: '',
-    email: '',
-    phone: '',
-    projects: '',
-    skills: '',
-    technicalSkills: '',
-    activities: '',
-    summary: '',
-    education: '',
-    expertise: '',
-    conclusion: ''
-  });
+/**
+ * ULTIMATE RESUME BUILDER - ENHANCED UI
+ * - Modern glassmorphism UI with smooth animations
+ * - Improved AI integration with visual feedback
+ * - Enhanced template previews with theme switching
+ * - ATS score visualization with progress bar
+ * - Better mobile responsiveness
+ */
 
-  const [selectedTemplate, setSelectedTemplate] = useState(null);
-  const [isFormFilled, setIsFormFilled] = useState(false);
-  const [currentSlide, setCurrentSlide] = useState(0);
+const THEMES = [
+  { id: "sky", name: "Sky", primary: "#0ea5e9", text: "#0f172a", subtle: "#e0f2fe" },
+  { id: "violet", name: "Violet", primary: "#7c3aed", text: "#0f172a", subtle: "#ede9fe" },
+  { id: "emerald", name: "Emerald", primary: "#10b981", text: "#064e3b", subtle: "#d1fae5" },
+  { id: "rose", name: "Rose", primary: "#f43f5e", text: "#111827", subtle: "#ffe4e6" },
+  { id: "slate", name: "Slate", primary: "#334155", text: "#0f172a", subtle: "#e2e8f0" },
+  { id: "amber", name: "Amber", primary: "#f59e0b", text: "#451a03", subtle: "#fef3c7" },
+];
 
-  const resume1Ref = useRef();
-  const resume2Ref = useRef();
-  const resume3Ref = useRef();
+const STARTER = {
+  name: "Abhishek Singh",
+  title: "Full‑Stack Developer (MERN)",
+  email: "abhishek@example.com",
+  phone: "+91 98765 43210",
+  address: "Lucknow, UP, India",
+  summary:
+    "Full‑stack developer focusing on performant, accessible web apps. 2+ years with MERN, CI/CD, testing, and DX love.",
+  projects: `GymX — AI lead-gen gym website with animated UI, payment links, and admin analytics.\nTaskTracker — Multi-user task app with JWT auth, Stripe/UPI, and real-time updates.`,
+  education: "M.Tech (AI & DS), AKTU — 2025",
+  technicalSkills:
+    "JavaScript, TypeScript, React, Redux/Zustand, Tailwind, Node.js, Express, MongoDB, PostgreSQL, Prisma/Sequelize, Firebase, Stripe, REST, WebSockets, Docker, Git, Testing",
+  activities: "Writing, Open-source, Hackathons, Fitness",
+  conclusion: "I hereby declare that the details above are true to the best of my knowledge.",
+  links: [
+    { label: "Portfolio", url: "https://example.dev" },
+    { label: "GitHub", url: "https://github.com/abhi" },
+    { label: "LinkedIn", url: "https://linkedin.com/in/abhi" },
+  ],
+};
 
-  const templates = [
+const defaultSections = [
+  { id: "summary", label: "Summary" },
+  { id: "projects", label: "Projects" },
+  { id: "skills", label: "Skills" },
+  { id: "education", label: "Education" },
+  { id: "activities", label: "Activities" },
+  { id: "declaration", label: "Declaration" },
+];
+
+function chip(text, theme) {
+  return (
+    <span 
+      className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium border shadow-sm"
+      style={{ 
+        background: theme.subtle, 
+        borderColor: theme.primary,
+        color: theme.text
+      }}
+    >
+      {text}
+    </span>
+  );
+}
+
+function SectionHeader({ title, accent }) {
+  return (
+    <div className="flex items-center gap-2 mb-3">
+      <div className="h-5 w-1.5 rounded-full" style={{ background: accent }} />
+      <h3 className="text-lg font-semibold tracking-tight">{title}</h3>
+    </div>
+  );
+}
+
+// ---------- AI LAYER (Gemini integration) ----------
+async function aiComplete({ provider, apiKey, system, prompt }) {
+  // Use Gemini API
+  return fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
     {
-      id: 1,
-      name: 'Professional',
-      thumbnail: 'https://images.unsplash.com/photo-1626785774573-4b799315345d?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60'
-    },
-    {
-      id: 2,
-      name: 'Creative',
-      thumbnail: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60'
-    },
-    {
-      id: 3,
-      name: 'Modern',
-      thumbnail: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60'
-    },
-    {
-      id: 4,
-      name: 'Minimalist',
-      thumbnail: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60'
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ 
+        contents: [{ 
+          parts: [{ 
+            text: `${system}\n\n${prompt}` 
+          }] 
+        }],
+        generationConfig: {
+          temperature: 0.7,
+          topK: 40,
+          topP: 0.95,
+          maxOutputTokens: 1024
+        }
+      }),
     }
-  ];
+  )
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`AI request failed: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(data => {
+      return data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    })
+    .catch(error => {
+      console.error("AI Error:", error);
+      return "(AI service unavailable)";
+    });
+}
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
+// ---------- TEMPLATES ----------
+function TemplatePro({ data, theme }) {
+  const accent = theme.primary;
+  const techList = (data.technicalSkills || "").split(",").map((s) => s.trim()).filter(Boolean);
+  const actList = (data.activities || "").split(",").map((s) => s.trim()).filter(Boolean);
 
-  const handleTemplateSelect = (id) => {
-    setSelectedTemplate(id);
-    setIsFormFilled(true);
-  };
+  return (
+    <div className="bg-white w-[794px] min-h-[1123px] p-8 rounded-2xl shadow-xl border border-black/5" style={{ color: theme.text }}>
+      <div className="text-center mb-6">
+        <h1 className="text-4xl font-extrabold tracking-tight" style={{ color: accent }}>
+          {data.name}
+        </h1>
+        <p className="text-lg opacity-80">{data.title}</p>
+        <div className="flex justify-center gap-3 text-sm mt-2 opacity-80 flex-wrap">
+          {chip(data.email, theme)} {chip(data.phone, theme)} {chip(data.address, theme)}
+        </div>
+        {data.links?.length ? (
+          <div className="flex justify-center flex-wrap gap-2 mt-2">
+            {data.links.map((l, i) => (
+              <a key={i} href={l.url} className="text-xs underline opacity-90" target="_blank" rel="noreferrer" style={{ color: accent }}>
+                {l.label}
+              </a>
+            ))}
+          </div>
+        ) : null}
+      </div>
 
-  const handleNextSlide = () => {
-    setCurrentSlide(prev => (prev === templates.length - 1 ? 0 : prev + 1));
-  };
+      <div className="grid grid-cols-3 gap-6">
+        {/* Left rail */}
+        <div className="col-span-1 space-y-6">
+          <div>
+            <SectionHeader title="Skills" accent={accent} />
+            <ul className="text-sm leading-6 list-disc pl-5">
+              {techList.map((sk, i) => (
+                <li key={i}>{sk}</li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <SectionHeader title="Education" accent={accent} />
+            <p className="text-sm whitespace-pre-line leading-6">{data.education}</p>
+          </div>
+          <div>
+            <SectionHeader title="Activities" accent={accent} />
+            <ul className="text-sm leading-6 list-disc pl-5">
+              {actList.map((a, i) => (
+                <li key={i}>{a}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
 
-  const handlePrevSlide = () => {
-    setCurrentSlide(prev => (prev === 0 ? templates.length - 1 : prev - 1));
-  };
+        {/* Main */}
+        <div className="col-span-2 space-y-6">
+          <div>
+            <SectionHeader title="Summary" accent={accent} />
+            <p className="text-sm leading-7 whitespace-pre-line">{data.summary}</p>
+          </div>
+          <div>
+            <SectionHeader title="Projects" accent={accent} />
+            <ul className="text-sm leading-7 list-disc pl-5 whitespace-pre-line">
+              {(data.projects || "").split("\n").map((p, i) => (
+                <li key={i}>{p}</li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <SectionHeader title="Declaration" accent={accent} />
+            <p className="text-sm leading-7 whitespace-pre-line">{data.conclusion}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-  const downloadResume = (ref) => {
-    if (!ref.current) return;
+function TemplateMinimal({ data, theme }) {
+  const accent = theme.primary;
+  const techList = (data.technicalSkills || "").split(",").map((s) => s.trim()).filter(Boolean);
 
-    html2canvas(ref.current).then(canvas => {
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF({
-        orientation: 'p',
-        unit: 'px',
-        format: 'a4'
-      });
-      const imgProps = pdf.getImageProperties(imgData);
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`${formData.name || 'resume'}.pdf`);
+  return (
+    <div className="bg-white w-[794px] min-h-[1123px] p-10 rounded-xl shadow-xl border border-black/5" style={{ color: theme.text }}>
+      <div className="flex items-end justify-between">
+        <div>
+          <h1 className="text-4xl font-bold" style={{ color: accent }}>{data.name}</h1>
+          <p className="opacity-80">{data.title}</p>
+        </div>
+        <div className="text-right text-sm opacity-80">
+          <div>{data.email}</div>
+          <div>{data.phone}</div>
+          <div>{data.address}</div>
+        </div>
+      </div>
+
+      <div className="h-1 w-full my-6 rounded" style={{ background: accent }} />
+
+      <div className="grid grid-cols-2 gap-8">
+        <div className="space-y-6">
+          <div>
+            <h3 className="font-semibold mb-1">Summary</h3>
+            <p className="text-sm whitespace-pre-line leading-7">{data.summary}</p>
+          </div>
+          <div>
+            <h3 className="font-semibold mb-1">Projects</h3>
+            <ul className="text-sm list-disc pl-5 whitespace-pre-line">
+              {(data.projects || "").split("\n").map((p, i) => (
+                <li key={i}>{p}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+        <div className="space-y-6">
+          <div>
+            <h3 className="font-semibold mb-1">Skills</h3>
+            <div className="flex flex-wrap gap-2">
+              {techList.map((sk, i) => (
+                <span 
+                  key={i} 
+                  className="text-xs px-2 py-1 rounded border" 
+                  style={{ 
+                    borderColor: theme.primary,
+                    background: theme.subtle
+                  }}
+                >
+                  {sk}
+                </span>
+              ))}
+            </div>
+          </div>
+          <div>
+            <h3 className="font-semibold mb-1">Education</h3>
+            <p className="text-sm whitespace-pre-line leading-7">{data.education}</p>
+          </div>
+        </div>
+      </div>
+
+      {data.links?.length ? (
+        <div className="mt-8 text-sm flex flex-wrap gap-3 opacity-90">
+          {data.links.map((l, i) => (
+            <a 
+              key={i} 
+              className="underline" 
+              href={l.url} 
+              target="_blank" 
+              rel="noreferrer"
+              style={{ color: accent }}
+            >
+              {l.label}
+            </a>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function TemplateCreative({ data, theme }) {
+  const accent = theme.primary;
+  const techList = (data.technicalSkills || "").split(",").map((s) => s.trim()).filter(Boolean);
+
+  return (
+    <div className="bg-gradient-to-br from-white to-gray-50 w-[794px] min-h-[1123px] p-8 rounded-3xl shadow-2xl border border-black/5 relative overflow-hidden" style={{ color: theme.text }}>
+      <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full blur-2xl opacity-40" style={{ background: accent }} />
+      <div className="absolute -bottom-20 -left-16 h-56 w-56 rounded-full blur-2xl opacity-30" style={{ background: theme.subtle }} />
+
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-4xl font-black tracking-tight" style={{ color: accent }}>{data.name}</h1>
+          <p className="opacity-80">{data.title}</p>
+        </div>
+        <div className="flex flex-col items-end text-sm">
+          <span>{data.email}</span>
+          <span>{data.phone}</span>
+          <span>{data.address}</span>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-3 gap-6">
+        <div className="col-span-2 space-y-6">
+          <div>
+            <SectionHeader title="About" accent={accent} />
+            <p className="text-sm leading-7 whitespace-pre-line">{data.summary}</p>
+          </div>
+          <div>
+            <SectionHeader title="Showcase" accent={accent} />
+            <ul className="text-sm leading-7 list-disc pl-5 whitespace-pre-line">
+              {(data.projects || "").split("\n").map((p, i) => (
+                <li key={i}>{p}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+        <div className="space-y-6">
+          <div>
+            <SectionHeader title="Toolkit" accent={accent} />
+            <div className="flex flex-wrap gap-2">
+              {techList.map((sk, i) => (
+                <span 
+                  key={i} 
+                  className="text-xs px-2 py-1 rounded-full border"
+                  style={{ 
+                    background: theme.subtle,
+                    borderColor: theme.primary
+                  }}
+                >
+                  {sk}
+                </span>
+              ))}
+            </div>
+          </div>
+          <div>
+            <SectionHeader title="Education" accent={accent} />
+            <p className="text-sm whitespace-pre-line leading-7">{data.education}</p>
+          </div>
+        </div>
+      </div>
+
+      {data.links?.length ? (
+        <div className="mt-8 text-sm flex flex-wrap gap-3">
+          {data.links.map((l, i) => (
+            <a 
+              key={i} 
+              className="underline" 
+              href={l.url} 
+              target="_blank" 
+              rel="noreferrer"
+              style={{ color: accent }}
+            >
+              {l.label}
+            </a>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+// ---------- MAIN COMPONENT ----------
+export default function UltimateResumeBuilder() {
+  const [template, setTemplate] = useState("pro"); 
+  const [themeId, setThemeId] = useState("sky");
+  const theme = useMemo(() => THEMES.find((t) => t.id === themeId) || THEMES[0], [themeId]);
+
+  const [data, setData] = useState(STARTER);
+  const [sections, setSections] = useState(defaultSections);
+  const [jd, setJd] = useState("");
+  const [aiProvider, setAiProvider] = useState("gemini");
+  const [apiKey, setApiKey] = useState("AIzaSyCpgaSyevRj5gq5Cz4rsN_4ro2OFOrArQk");
+  const [busy, setBusy] = useState(false);
+  const [busyAction, setBusyAction] = useState("");
+  const [ats, setAts] = useState({ score: 0, missing: [] });
+  const [aiStatus, setAiStatus] = useState({ type: "", message: "" });
+
+  const previewRef = useRef(null);
+
+  // ------- helpers -------
+  const update = (patch) => setData((d) => ({ ...d, ...patch }));
+  const moveSection = (idx, dir) => {
+    setSections((arr) => {
+      const next = [...arr];
+      const swap = dir === "up" ? idx - 1 : idx + 1;
+      if (swap < 0 || swap >= next.length) return next;
+      [next[idx], next[swap]] = [next[swap], next[idx]];
+      return next;
     });
   };
 
-  const renderResume1 = () => (
-    <div ref={resume1Ref} className="bg-blue-50 p-8 max-w-4xl mx-auto my-8 rounded-lg shadow-xl">
-      <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold text-blue-800 mb-2">{formData.name}</h1>
-        <p className="text-xl text-blue-600">{formData.title}</p>
-        <div className="flex justify-center space-x-4 mt-2 text-gray-600">
-          <p>{formData.email}</p> | <p>{formData.phone}</p>
-        </div>
-      </div>
+  const renderByTemplate = () => {
+    const props = { data, theme };
+    switch (template) {
+      case "minimal":
+        return <TemplateMinimal {...props} />;
+      case "creative":
+        return <TemplateCreative {...props} />;
+      default:
+        return <TemplatePro {...props} />;
+    }
+  };
 
-      <div className="border-t-2 border-blue-200 pt-6 mb-6">
-        <h2 className="text-2xl font-semibold text-blue-700 bg-blue-100 px-4 py-2 rounded">Career Objective</h2>
-        <p className="mt-2 text-gray-700">{formData.summary}</p>
-      </div>
+  // ------ Export (retina, multipage) ------
+  const exportPDF = async () => {
+    if (!previewRef.current) return;
+    const node = previewRef.current;
 
-      <div className="border-t-2 border-blue-200 pt-6 mb-6">
-        <h2 className="text-2xl font-semibold text-blue-700 bg-blue-100 px-4 py-2 rounded">Projects</h2>
-        <p className="mt-2 text-gray-700">{formData.projects}</p>
-      </div>
+    // scale up for sharper text
+    const canvas = await html2canvas(node, { scale: 2, backgroundColor: "#ffffff" });
+    const imgData = canvas.toDataURL("image/png");
+    const pdf = new jsPDF({ orientation: "p", unit: "pt", format: "a4" });
 
-      <div className="border-t-2 border-blue-200 pt-6 mb-6">
-        <h2 className="text-2xl font-semibold text-blue-700 bg-blue-100 px-4 py-2 rounded">Education</h2>
-        <p className="mt-2 text-gray-700">{formData.education}</p>
-      </div>
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
 
-      <div className="border-t-2 border-blue-200 pt-6 mb-6">
-        <h2 className="text-2xl font-semibold text-blue-700 bg-blue-100 px-4 py-2 rounded">Skills</h2>
-        <ul className="mt-2 text-gray-700 list-disc pl-5">
-          {formData.technicalSkills.split(',').map((skill, index) => (
-            <li key={index} className="mb-1">{skill.trim()}</li>
-          ))}
-        </ul>
-      </div>
+    const ratio = canvas.width / canvas.height; // w/h
+    const imgWidth = pageWidth;
+    const imgHeight = imgWidth / ratio;
 
-      <div className="border-t-2 border-blue-200 pt-6 mb-6">
-        <h2 className="text-2xl font-semibold text-blue-700 bg-blue-100 px-4 py-2 rounded">Hobbies</h2>
-        <ul className="mt-2 text-gray-700 list-disc pl-5">
-          {formData.activities.split(',').map((activity, index) => (
-            <li key={index} className="mb-1">{activity.trim()}</li>
-          ))}
-        </ul>
-      </div>
+    let y = 0;
+    let remaining = imgHeight;
 
-      <div className="border-t-2 border-blue-200 pt-6">
-        <h2 className="text-2xl font-semibold text-blue-700 bg-blue-100 px-4 py-2 rounded">Declaration</h2>
-        <p className="mt-2 text-gray-700">{formData.conclusion}</p>
-        <p className="mt-4 font-semibold">{formData.name}</p>
-      </div>
-    </div>
-  );
+    // If the resume height exceeds one page, slice it
+    const pageCanvas = document.createElement("canvas");
+    const pageCtx = pageCanvas.getContext("2d");
 
-  const renderResume2 = () => (
-    <div ref={resume2Ref} className="bg-white max-w-4xl mx-auto my-8 rounded-lg shadow-xl overflow-hidden">
-      <div className="flex flex-col md:flex-row">
-        <div className="bg-gray-800 text-white p-8 md:w-1/3">
-          <div className="flex justify-center mb-6">
-            <img 
-              src="https://randomuser.me/api/portraits/men/1.jpg" 
-              alt="Profile" 
-              className="w-32 h-32 rounded-full border-4 border-white object-cover"
-            />
-          </div>
+    while (remaining > 0) {
+      const sliceHeight = Math.min(pageHeight, remaining);
+      pageCanvas.width = canvas.width;
+      pageCanvas.height = (sliceHeight * canvas.width) / pageWidth; // scale slice to canvas px
 
-          <div className="mb-8">
-            <h2 className="text-xl font-bold mb-4 border-b-2 border-white pb-2">CONTACT</h2>
-            <div className="space-y-2">
-              <p className="flex items-center">
-                <FaPhone className="mr-2" /> {formData.phone}
-              </p>
-              <p className="flex items-center">
-                <FaEnvelope className="mr-2" /> {formData.email}
-              </p>
-              <p className="flex items-center">
-                <FaMapMarkerAlt className="mr-2" /> {formData.address}
-              </p>
-            </div>
-          </div>
+      pageCtx.drawImage(
+        canvas,
+        0,
+        (y * canvas.width) / pageWidth,
+        canvas.width,
+        pageCanvas.height,
+        0,
+        0,
+        canvas.width,
+        pageCanvas.height
+      );
 
-          <div className="mb-8">
-            <h2 className="text-xl font-bold mb-4 border-b-2 border-white pb-2">SKILLS</h2>
-            <ul className="space-y-2">
-              {formData.technicalSkills.split(',').map((skill, index) => (
-                <li key={index} className="flex items-center">
-                  <IoIosArrowForward className="mr-2" /> {skill.trim()}
-                </li>
-              ))}
-            </ul>
-          </div>
+      const sliceData = pageCanvas.toDataURL("image/png");
+      const sliceDisplayHeight = sliceHeight; // pt
 
-          <div>
-            <h2 className="text-xl font-bold mb-4 border-b-2 border-white pb-2">EDUCATION</h2>
-            <p className="text-gray-300">{formData.education}</p>
-          </div>
-        </div>
+      if (y > 0) pdf.addPage();
+      pdf.addImage(sliceData, "PNG", 0, 0, pageWidth, sliceDisplayHeight);
 
-        <div className="p-8 md:w-2/3">
-          <div className="mb-8">
-            <h1 className="text-4xl font-bold text-gray-800">{formData.name}</h1>
-            <h3 className="text-xl text-gray-600 mt-2">{formData.title}</h3>
-          </div>
+      y += sliceHeight;
+      remaining -= sliceHeight;
+    }
 
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4 border-b-2 border-gray-200 pb-2">About Me</h2>
-            <p className="text-gray-700">{formData.summary}</p>
-          </div>
+    pdf.save(`${(data.name || "resume").replace(/\s+/g, "_")}.pdf`);
+  };
 
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4 border-b-2 border-gray-200 pb-2">Projects</h2>
-            <p className="text-gray-700">{formData.projects}</p>
-          </div>
+  const exportPNG = async () => {
+    if (!previewRef.current) return;
+    const canvas = await html2canvas(previewRef.current, { scale: 2, backgroundColor: "#ffffff" });
+    const url = canvas.toDataURL("image/png");
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${(data.name || "resume").replace(/\s+/g, "_")}.png`;
+    a.click();
+  };
 
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4 border-b-2 border-gray-200 pb-2">Activities</h2>
-            <ul className="list-disc pl-5 text-gray-700">
-              {formData.activities.split(',').map((activity, index) => (
-                <li key={index}>{activity.trim()}</li>
-              ))}
-            </ul>
-          </div>
+  const saveJSON = () => {
+    const blob = new Blob([JSON.stringify({ data, template, themeId }, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `resume_${Date.now()}.json`;
+    a.click();
+  };
 
-          <div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-4 border-b-2 border-gray-200 pb-2">Conclusion</h2>
-            <p className="text-gray-700">{formData.conclusion}</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  const loadJSON = (file) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const parsed = JSON.parse(reader.result);
+        if (parsed.data) setData(parsed.data);
+        if (parsed.template) setTemplate(parsed.template);
+        if (parsed.themeId) setThemeId(parsed.themeId);
+      } catch (e) {
+        alert("Invalid JSON");
+      }
+    };
+    reader.readAsText(file);
+  };
 
-  const renderResume3 = () => (
-    <div ref={resume3Ref} className="max-w-md mx-auto my-8 bg-white shadow-lg">
-      <div className="flex">
-        <div className="w-1/3 bg-gray-700 text-white p-4">
-          <div className="flex justify-center mb-4">
-            <img 
-              src="https://randomuser.me/api/portraits/women/1.jpg" 
-              alt="Profile" 
-              className="w-24 h-24 rounded-full border-2 border-white object-cover"
-            />
-          </div>
+  // ------ ATS score (simple keyword match) ------
+  const computeATS = () => {
+    const text = `${data.summary}\n${data.projects}\n${data.technicalSkills}\n${data.education}`.toLowerCase();
+    const words = (jd || "").toLowerCase().match(/[a-z0-9+#.\-]{3,}/g) || [];
+    const uniq = [...new Set(words)];
+    const matched = uniq.filter((w) => text.includes(w));
+    const missing = uniq.filter((w) => !text.includes(w)).slice(0, 25);
+    const score = Math.round((matched.length / (uniq.length || 1)) * 100);
+    setAts({ score, missing });
+  };
 
-          <div className="mb-6">
-            <h3 className="text-sm font-bold mb-2">Contact</h3>
-            <div className="text-xs space-y-1">
-              <p><span className="font-semibold">Phone:</span> {formData.phone}</p>
-              <p><span className="font-semibold">Email:</span> {formData.email}</p>
-              <p><span className="font-semibold">Address:</span> {formData.address}</p>
-            </div>
-          </div>
+  // ------ AI Actions ------
+  const runAI = async (kind) => {
+    setBusy(true);
+    setBusyAction(kind);
+    setAiStatus({ type: "processing", message: "Generating content..." });
+    
+    try {
+      let system = "You are an expert resume writing assistant. Be concise, quantify impact, and keep a professional tone.";
+      let prompt = "";
 
-          <div className="mb-6">
-            <h3 className="text-sm font-bold mb-2">Education</h3>
-            <p className="text-xs">{formData.education}</p>
-          </div>
-
-          <div className="mb-6">
-            <h3 className="text-sm font-bold mb-2">Expertise</h3>
-            <ul className="text-xs list-disc pl-4">
-              {formData.technicalSkills.split(',').map((skill, index) => (
-                <li key={index}>{skill.trim()}</li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="text-sm font-bold mb-2">Activities</h3>
-            <ul className="text-xs list-disc pl-4">
-              {formData.activities.split(',').map((activity, index) => (
-                <li key={index}>{activity.trim()}</li>
-              ))}
-            </ul>
-          </div>
-        </div>
-
-        <div className="w-2/3 p-4">
-          <div className="mb-6">
-            <h1 className="text-xl font-bold">{formData.name}</h1>
-            <p className="text-sm text-gray-600">{formData.title}</p>
-            <p className="text-xs mt-2 text-gray-700">{formData.summary}</p>
-          </div>
-
-          <div className="border-t border-gray-200 pt-4 mb-4">
-            <h3 className="text-sm font-bold mb-2">Projects</h3>
-            <p className="text-xs text-gray-700">{formData.projects}</p>
-          </div>
-
-          <div className="border-t border-gray-200 pt-4">
-            <h3 className="text-sm font-bold mb-2">Declaration</h3>
-            <p className="text-xs text-gray-700">{formData.conclusion}</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+      if (kind === "objective") {
+        prompt = `Create a 3-sentence professional summary for: ${data.title}. Use details: ${data.technicalSkills}.`;
+        const out = await aiComplete({ provider: aiProvider, apiKey, system, prompt });
+        update({ summary: String(out).trim() });
+        setAiStatus({ type: "success", message: "Summary generated!" });
+      }
+      if (kind === "quantify") {
+        prompt = `Rewrite the following project bullets, adding measurable impact, metrics, and outcomes. Keep each bullet under 22 words.\n\n${data.projects}`;
+        const out = await aiComplete({ provider: aiProvider, apiKey, system, prompt });
+        update({ projects: String(out).trim() });
+        setAiStatus({ type: "success", message: "Projects quantified!" });
+      }
+      if (kind === "skills") {
+        prompt = `Extract and rank at most 14 technical skills from this profile. Return comma-separated only.\n\nTitle: ${data.title}\nSummary: ${data.summary}\nProjects: ${data.projects}`;
+        const out = await aiComplete({ provider: aiProvider, apiKey, system, prompt });
+        update({ technicalSkills: String(out).replace(/\n/g, ", ").trim() });
+        setAiStatus({ type: "success", message: "Skills extracted!" });
+      }
+      if (kind === "tailor") {
+        prompt = `Tailor the resume summary and 6-8 bullets for the following job description. Keep it ATS-friendly.\n\nJD:\n${jd}\n\nCurrent Summary:\n${data.summary}\n\nCurrent Projects:\n${data.projects}`;
+        const out = await aiComplete({ provider: aiProvider, apiKey, system, prompt });
+        // naive split: first paragraph to summary, rest to projects
+        const [first, ...rest] = String(out).split(/\n\n+/);
+        update({ summary: first?.trim() || data.summary, projects: rest.join("\n").trim() || data.projects });
+        setAiStatus({ type: "success", message: "Resume tailored to JD!" });
+      }
+    } catch (e) {
+      console.error(e);
+      setAiStatus({ type: "error", message: "AI action failed. Check API key." });
+    } finally {
+      setBusy(false);
+      setBusyAction("");
+      setTimeout(() => setAiStatus({ type: "", message: "" }), 5000);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <header className="bg-white shadow-sm">
-        <div className="container mx-auto px-4 py-6">
-          <h1 className="text-3xl font-bold text-blue-600">Resume Builder</h1>
-          <p className="text-gray-600">Create your professional resume in minutes</p>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      {/* Top Bar */}
+      <div className="sticky top-0 z-30 backdrop-blur-lg bg-white/80 border-b border-black/5 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-indigo-600" />
+            <span className="font-bold text-xl bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">
+              Ultimate Resume Builder
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={exportPNG} 
+              className="px-3 py-1.5 rounded-lg border bg-white hover:bg-gray-50 text-sm flex items-center gap-2 shadow-sm transition-all hover:shadow"
+            >
+              <Download className="h-4 w-4" /> PNG
+            </button>
+            <button 
+              onClick={exportPDF} 
+              className="px-3 py-1.5 rounded-lg text-white text-sm flex items-center gap-2 shadow-md transition-all hover:shadow-lg"
+              style={{ background: theme.primary }}
+            >
+              <Download className="h-4 w-4" /> PDF
+            </button>
+            <button 
+              onClick={saveJSON} 
+              className="px-3 py-1.5 rounded-lg border bg-white hover:bg-gray-50 text-sm flex items-center gap-2 shadow-sm transition-all hover:shadow"
+            >
+              <FileJson className="h-4 w-4" /> Save
+            </button>
+            <label className="px-3 py-1.5 rounded-lg border bg-white hover:bg-gray-50 text-sm flex items-center gap-2 cursor-pointer shadow-sm transition-all hover:shadow">
+              <Upload className="h-4 w-4" /> Load
+              <input type="file" accept="application/json" className="hidden" onChange={(e) => e.target.files?.[0] && loadJSON(e.target.files[0])} />
+            </label>
+          </div>
         </div>
-      </header>
+      </div>
 
-      {!isFormFilled ? (
-        <div className="container mx-auto px-4 py-12">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-blue-800 mb-4">Choose a Template</h2>
-            <p className="text-xl text-gray-600">Select from our professionally designed templates</p>
+      <div className="max-w-7xl mx-auto p-4 grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* LEFT: Controls */}
+        <motion.div 
+          layout 
+          className="bg-white/90 backdrop-blur-sm rounded-2xl border border-white/20 shadow-lg p-4 lg:p-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <div className="flex items-center gap-2">
+              <LayoutTemplate className="h-5 w-5 text-indigo-600" />
+              <span className="font-semibold">Template</span>
+            </div>
+            <div className="flex items-center gap-2">
+              {[
+                { id: "pro", label: "Professional" },
+                { id: "minimal", label: "Minimal" },
+                { id: "creative", label: "Creative" },
+              ].map((t) => (
+                <motion.button
+                  key={t.id}
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setTemplate(t.id)}
+                  className={`px-3 py-1.5 rounded-lg text-sm border transition-all ${
+                    template === t.id 
+                      ? "text-white shadow-inner" 
+                      : "bg-white hover:bg-gray-50"
+                  }`}
+                  style={template === t.id ? { 
+                    background: theme.primary,
+                    borderColor: theme.primary
+                  } : {}}
+                >
+                  {t.label}
+                </motion.button>
+              ))}
+            </div>
           </div>
 
-          <div className="relative max-w-4xl mx-auto">
-            <div className="overflow-hidden">
-              <div 
-                className="flex transition-transform duration-300 ease-in-out"
-                style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+            <div className="flex items-center gap-2">
+              <Palette className="h-5 w-5 text-indigo-600" />
+              <span className="font-semibold">Theme</span>
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              {THEMES.map((t) => (
+                <motion.button
+                  key={t.id}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  title={t.name}
+                  onClick={() => setThemeId(t.id)}
+                  className={`h-8 w-8 rounded-full border-2 flex items-center justify-center ${
+                    themeId === t.id ? "ring-2 ring-offset-2 ring-gray-800" : ""
+                  }`}
+                  style={{ 
+                    background: t.subtle, 
+                    borderColor: t.primary 
+                  }}
+                >
+                  {themeId === t.id && <CheckCircle2 className="h-4 w-4 text-gray-800" />}
+                </motion.button>
+              ))}
+            </div>
+          </div>
+
+          {/* Form */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input label="Full Name" value={data.name} onChange={(v) => update({ name: v })} />
+            <Input label="Title" value={data.title} onChange={(v) => update({ title: v })} />
+            <Input label="Email" value={data.email} onChange={(v) => update({ email: v })} />
+            <Input label="Phone" value={data.phone} onChange={(v) => update({ phone: v })} />
+            <Input label="Address" value={data.address} onChange={(v) => update({ address: v })} />
+            <Input label="Education" value={data.education} onChange={(v) => update({ education: v })} />
+            <Textarea label="Summary" value={data.summary} onChange={(v) => update({ summary: v })} rows={3} />
+            <Textarea label="Projects (bullets, new line)" value={data.projects} onChange={(v) => update({ projects: v })} rows={5} />
+            <Input label="Technical Skills (comma)" value={data.technicalSkills} onChange={(v) => update({ technicalSkills: v })} />
+            <Input label="Activities (comma)" value={data.activities} onChange={(v) => update({ activities: v })} />
+            <Textarea label="Declaration" value={data.conclusion} onChange={(v) => update({ conclusion: v })} rows={2} />
+          </div>
+
+          {/* Links */}
+          <div className="mt-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="font-medium">Links</span>
+              <button
+                className="text-sm px-2 py-1 rounded border hover:bg-gray-50 transition-all"
+                onClick={() => update({ links: [...(data.links || []), { label: "Website", url: "https://" }] })}
               >
-                {templates.map((template) => (
-                  <div key={template.id} className="w-full flex-shrink-0 px-4">
-                    <div 
-                      className="bg-white rounded-xl shadow-lg overflow-hidden transform transition-all duration-300 hover:scale-105 cursor-pointer"
-                      onClick={() => handleTemplateSelect(template.id)}
+                + Add Link
+              </button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {(data.links || []).map((l, i) => (
+                <div key={i} className="flex gap-2">
+                  <input
+                    className="w-36 md:w-40 border rounded-lg px-2 py-1 text-sm focus:ring focus:ring-opacity-20"
+                    style={{ 
+                      borderColor: theme.primary,
+                      backgroundColor: theme.subtle + "40",
+                      focusRingColor: theme.primary
+                    }}
+                    value={l.label}
+                    onChange={(e) => {
+                      const next = [...(data.links || [])];
+                      next[i] = { ...next[i], label: e.target.value };
+                      update({ links: next });
+                    }}
+                  />
+                  <input
+                    className="flex-1 border rounded-lg px-2 py-1 text-sm focus:ring focus:ring-opacity-20"
+                    style={{ 
+                      borderColor: theme.primary,
+                      backgroundColor: theme.subtle + "40",
+                      focusRingColor: theme.primary
+                    }}
+                    value={l.url}
+                    onChange={(e) => {
+                      const next = [...(data.links || [])];
+                      next[i] = { ...next[i], url: e.target.value };
+                      update({ links: next });
+                    }}
+                  />
+                  <button
+                    className="px-2 rounded-lg border text-xs hover:bg-gray-50 transition-colors"
+                    onClick={() => update({ links: (data.links || []).filter((_, j) => j !== i) })}
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Sections order */}
+          <div className="mt-6">
+            <div className="flex items-center gap-2 mb-2">
+              <Eye className="h-5 w-5 text-indigo-600" /> <span className="font-medium">Sections Order</span>
+            </div>
+            <div className="space-y-2">
+              {sections.map((s, i) => (
+                <motion.div 
+                  key={s.id} 
+                  className="flex items-center justify-between p-2 rounded-lg border bg-white"
+                  whileHover={{ scale: 1.01 }}
+                >
+                  <span className="text-sm">{s.label}</span>
+                  <div className="flex items-center gap-2">
+                    <button 
+                      className="p-1 border rounded hover:bg-gray-50 transition-colors"
+                      onClick={() => moveSection(i, "up")}
                     >
-                      <img 
-                        src={template.thumbnail} 
-                        alt={template.name} 
-                        className="w-full h-64 object-cover"
-                      />
-                      <div className="p-6">
-                        <h3 className="text-xl font-semibold text-gray-800">{template.name}</h3>
-                        <p className="text-gray-600 mt-2">Professional {template.name.toLowerCase()} design</p>
-                        <button className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                          Select Template
-                        </button>
-                      </div>
+                      <ChevronLeft className="h-4 w-4" />
+                    </button>
+                    <button 
+                      className="p-1 border rounded hover:bg-gray-50 transition-colors"
+                      onClick={() => moveSection(i, "down")}
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+
+          {/* AI Panel */}
+          <motion.div 
+            className="mt-8 p-4 rounded-2xl border bg-gradient-to-br from-indigo-50/50 to-purple-50/50"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Bot className="h-5 w-5 text-indigo-600" /> 
+                <span className="font-semibold">AI Assistant</span>
+                <span className="text-xs bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-full">Gemini</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="password"
+                  placeholder="API Key"
+                  className="border rounded-lg px-3 py-1.5 text-sm w-56 focus:ring-2 focus:ring-indigo-200"
+                  value={apiKey}
+                  onChange={(e) => setApiKey(e.target.value)}
+                />
+              </div>
+            </div>
+
+            {aiStatus.message && (
+              <motion.div 
+                className={`p-3 rounded-lg mb-4 flex items-center gap-2 ${
+                  aiStatus.type === "error" 
+                    ? "bg-red-100 text-red-800" 
+                    : aiStatus.type === "success" 
+                      ? "bg-green-100 text-green-800" 
+                      : "bg-blue-100 text-blue-800"
+                }`}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                {aiStatus.type === "success" ? (
+                  <CheckCircle2 className="h-4 w-4" />
+                ) : aiStatus.type === "error" ? (
+                  <X className="h-4 w-4" />
+                ) : (
+                  <RefreshCw className="h-4 w-4 animate-spin" />
+                )}
+                <span className="text-sm">{aiStatus.message}</span>
+              </motion.div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <AIButton 
+                busy={busy} 
+                busyAction={busyAction} 
+                action="objective"
+                onClick={() => runAI("objective")} 
+                icon={<Wand2 className="h-4 w-4" />}
+              >
+                Write objective
+              </AIButton>
+              <AIButton 
+                busy={busy} 
+                busyAction={busyAction} 
+                action="quantify"
+                onClick={() => runAI("quantify")} 
+                icon={<CheckCircle2 className="h-4 w-4" />}
+              >
+                Quantify achievements
+              </AIButton>
+              <AIButton 
+                busy={busy} 
+                busyAction={busyAction} 
+                action="skills"
+                onClick={() => runAI("skills")} 
+                icon={<RefreshCw className="h-4 w-4" />}
+              >
+                Extract skills
+              </AIButton>
+              <AIButton 
+                busy={busy} 
+                busyAction={busyAction} 
+                action="tailor"
+                onClick={() => runAI("tailor")} 
+                icon={<Search className="h-4 w-4" />}
+              >
+                Tailor to JD
+              </AIButton>
+            </div>
+
+            <div className="mt-4">
+              <Textarea 
+                label="Paste Job Description (for tailoring & ATS)" 
+                value={jd} 
+                onChange={setJd} 
+                rows={5} 
+              />
+              <div className="flex items-center gap-2 mt-2 flex-wrap">
+                <button 
+                  className="px-3 py-1.5 rounded-lg border hover:bg-gray-50 text-sm flex items-center gap-2 transition-all"
+                  onClick={computeATS}
+                >
+                  <Star className="h-4 w-4" /> Compute ATS Score
+                </button>
+                
+                {ats.score > 0 && (
+                  <div className="flex items-center gap-2">
+                    <div className="text-sm font-medium">Score: <b>{ats.score}%</b></div>
+                    <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full rounded-full transition-all duration-500"
+                        style={{ 
+                          width: `${ats.score}%`,
+                          background: ats.score > 80 
+                            ? "#10b981" 
+                            : ats.score > 60 
+                              ? "#f59e0b" 
+                              : "#f43f5e"
+                        }}
+                      ></div>
                     </div>
                   </div>
-                ))}
+                )}
+                
+                {!!ats.missing.length && (
+                  <div className="text-xs opacity-70 bg-white/50 p-1.5 rounded">
+                    <span className="font-medium">Missing:</span> {ats.missing.slice(0, 8).join(", ")}{ats.missing.length > 8 ? "…" : ""}
+                  </div>
+                )}
               </div>
             </div>
+          </motion.div>
+        </motion.div>
 
-            <button 
-              onClick={handlePrevSlide}
-              className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-white p-2 rounded-full shadow-md hover:bg-gray-100 z-10"
-            >
-              <IoIosArrowBack className="text-gray-700 text-xl" />
-            </button>
-            <button 
-              onClick={handleNextSlide}
-              className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-white p-2 rounded-full shadow-md hover:bg-gray-100 z-10"
-            >
-              <IoIosArrowForward className="text-gray-700 text-xl" />
-            </button>
-          </div>
-
-          <div className="flex justify-center mt-6">
-            {templates.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentSlide(index)}
-                className={`w-3 h-3 mx-1 rounded-full ${currentSlide === index ? 'bg-blue-600' : 'bg-gray-300'}`}
-              />
-            ))}
-          </div>
-        </div>
-      ) : (
-        <div className="container mx-auto px-4 py-12">
-          <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
-            <div className="p-8">
-              <h2 className="text-3xl font-bold text-gray-800 mb-6">Fill Your Details</h2>
-              
-              <form className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-gray-700 mb-2">Full Name</label>
-                    <input
-                      type="text"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="John Doe"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-gray-700 mb-2">Professional Title</label>
-                    <input
-                      type="text"
-                      name="title"
-                      value={formData.title}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="Software Engineer"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-gray-700 mb-2">Email</label>
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="john@example.com"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-gray-700 mb-2">Phone</label>
-                    <input
-                      type="tel"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="+1 234 567 890"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-gray-700 mb-2">Address</label>
-                    <input
-                      type="text"
-                      name="address"
-                      value={formData.address}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="123 Main St, City"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-gray-700 mb-2">Education</label>
-                    <input
-                      type="text"
-                      name="education"
-                      value={formData.education}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="BSc Computer Science, University"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-gray-700 mb-2">Career Objective/Summary</label>
-                  <textarea
-                    name="summary"
-                    value={formData.summary}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    rows="3"
-                    placeholder="Brief summary of your professional background..."
-                  ></textarea>
-                </div>
-
-                <div>
-                  <label className="block text-gray-700 mb-2">Projects</label>
-                  <textarea
-                    name="projects"
-                    value={formData.projects}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    rows="3"
-                    placeholder="Describe your key projects..."
-                  ></textarea>
-                </div>
-
-                <div>
-                  <label className="block text-gray-700 mb-2">Technical Skills (comma separated)</label>
-                  <input
-                    type="text"
-                    name="technicalSkills"
-                    value={formData.technicalSkills}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="JavaScript, React, Node.js, Python"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-gray-700 mb-2">Activities/Hobbies (comma separated)</label>
-                  <input
-                    type="text"
-                    name="activities"
-                    value={formData.activities}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Reading, Hiking, Photography"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-gray-700 mb-2">Declaration</label>
-                  <textarea
-                    name="conclusion"
-                    value={formData.conclusion}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    rows="2"
-                    placeholder="I hereby declare that the above information is true..."
-                  ></textarea>
-                </div>
-              </form>
-            </div>
-
-            <div className="bg-gray-50 px-8 py-6 border-t border-gray-200">
-              <div className="flex justify-between items-center">
-                <button 
-                  onClick={() => setIsFormFilled(false)}
-                  className="flex items-center px-6 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-100"
-                >
-                  <FaArrowLeft className="mr-2" /> Back to Templates
-                </button>
-                <button 
-                  onClick={() => downloadResume(selectedTemplate === 1 ? resume1Ref : selectedTemplate === 2 ? resume2Ref : resume3Ref)}
-                  className="flex items-center px-6 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700"
-                >
-                  Download PDF <FaDownload className="ml-2" />
-                </button>
+        {/* RIGHT: Live Preview */}
+        <motion.div 
+          layout 
+          className="space-y-3"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          <motion.div
+            layout
+            className="rounded-3xl border border-white/20 shadow-xl bg-white/90 backdrop-blur-sm p-4"
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Eye className="h-5 w-5 text-indigo-600" /> 
+                <span className="font-semibold">Live Preview</span>
               </div>
+              <div className="text-xs opacity-60">A4 • 794×1123 px (print ready)</div>
             </div>
-          </div>
+            <div className="flex justify-center">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={`${template}-${themeId}-${data.name}`}
+                  ref={previewRef}
+                  initial={{ opacity: 0, y: 20, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.35 }}
+                >
+                  {renderByTemplate()}
+                </motion.div>
+              </AnimatePresence>
+            </div>
+          </motion.div>
 
-          <div className="mt-12">
-            <h3 className="text-2xl font-bold text-gray-800 mb-6">Your Resume Preview</h3>
-            {selectedTemplate === 1 && renderResume1()}
-            {selectedTemplate === 2 && renderResume2()}
-            {selectedTemplate === 3 && renderResume3()}
-            {selectedTemplate === 4 && renderResume1()} {/* Reusing template 1 for minimalist */}
-          </div>
-        </div>
-      )}
+          <QuickStarts onPick={(preset) => setData({ ...data, ...preset })} theme={theme} />
+        </motion.div>
+      </div>
+
+      <footer className="max-w-7xl mx-auto px-4 py-8 text-center text-xs opacity-60">
+        Made with ❤️ — Tips: keep it one page, use action verbs, and quantify impact.
+      </footer>
     </div>
   );
-};
+}
 
-export default ResumeBuilder;
+// ---------- UI PRIMITIVES ----------
+function Input({ label, value, onChange, type = "text" }) {
+  return (
+    <label className="block">
+      <div className="text-sm mb-1 font-medium text-gray-700">{label}</div>
+      <input
+        type={type}
+        className="w-full px-3 py-2 rounded-lg border focus:ring-2 focus:ring-indigo-200 focus:outline-none transition-all"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      />
+    </label>
+  );
+}
+
+function Textarea({ label, value, onChange, rows = 4 }) {
+  return (
+    <label className="block">
+      <div className="text-sm mb-1 font-medium text-gray-700">{label}</div>
+      <textarea
+        rows={rows}
+        className="w-full px-3 py-2 rounded-lg border focus:ring-2 focus:ring-indigo-200 focus:outline-none transition-all"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      />
+    </label>
+  );
+}
+
+function AIButton({ children, onClick, icon, busy, busyAction, action }) {
+  const isActive = busy && busyAction === action;
+  
+  return (
+    <motion.button
+      whileHover={{ scale: 1.03 }}
+      whileTap={{ scale: 0.98 }}
+      onClick={onClick}
+      disabled={busy}
+      className={`flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-sm border shadow-sm transition-all ${
+        isActive 
+          ? "bg-indigo-100 text-indigo-800 border-indigo-300" 
+          : "bg-white hover:shadow disabled:opacity-50"
+      }`}
+    >
+      {isActive ? <RefreshCw className="h-4 w-4 animate-spin" /> : icon} 
+      {children}
+    </motion.button>
+  );
+}
+
+// ---------- QUICK STARTS ----------
+function QuickStarts({ onPick, theme }) {
+  const presets = [
+    {
+      name: "Frontend",
+      patch: {
+        title: "Frontend Engineer",
+        technicalSkills: "JavaScript, React, Redux, Tailwind, Webpack, Vite, Vitest, Cypress, Lighthouse, PWAs",
+        summary:
+          "Frontend engineer crafting fast, accessible UIs. Deep in React/Tailwind, testing, and performance budgets.",
+      },
+    },
+    {
+      name: "Backend",
+      patch: {
+        title: "Backend Engineer",
+        technicalSkills: "Node.js, Express, PostgreSQL, MongoDB, Prisma, Redis, Kafka, Docker, CI/CD, Testing",
+        summary:
+          "Backend engineer shipping robust APIs and event-driven services with observability and rock‑solid DX.",
+      },
+    },
+    {
+      name: "Full‑Stack",
+      patch: {
+        title: "Full‑Stack Developer (MERN)",
+        technicalSkills:
+          "JavaScript, TypeScript, React, Node.js, Express, MongoDB, Tailwind, Firebase, Stripe, WebSockets, Testing",
+        summary:
+          "Full‑stack MERN dev building polished web apps end‑to‑end, from schema to pixels — with tests.",
+      },
+    },
+  ];
+
+  return (
+    <motion.div 
+      className="bg-white/90 backdrop-blur-sm rounded-2xl border border-white/20 shadow-lg p-4"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.3 }}
+    >
+      <div className="flex items-center gap-2 mb-3">
+        <Wand2 className="h-5 w-5 text-indigo-600" /> <span className="font-semibold">Quick Starts</span>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {presets.map((p) => (
+          <motion.button
+            key={p.name}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => onPick(p.patch)}
+            className="px-3 py-1.5 rounded-full border hover:bg-gray-50 text-sm transition-all"
+            style={{ 
+              borderColor: theme.primary,
+              backgroundColor: theme.subtle + "40"
+            }}
+          >
+            {p.name}
+          </motion.button>
+        ))}
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => onPick(STARTER)}
+          className="px-3 py-1.5 rounded-full border hover:bg-gray-50 text-sm flex items-center gap-2 transition-all"
+          style={{ 
+            borderColor: theme.primary,
+            backgroundColor: theme.subtle + "40"
+          }}
+        >
+          <RotateCcw className="h-4 w-4" /> Reset
+        </motion.button>
+      </div>
+    </motion.div>
+  );
+}

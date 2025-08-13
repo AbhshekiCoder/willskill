@@ -12,6 +12,7 @@ import 'rsuite/dist/rsuite.min.css';
 import { Route, Routes } from 'react-router-dom'
 import Home from './Pages/Home'
 import { Loader } from 'rsuite';
+
 import Navbar from './Components/Navbar';
 import Footer from './Components/Footer';
 import axios from 'axios';
