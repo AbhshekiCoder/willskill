@@ -1,0 +1,95 @@
+/* MainContainer */
+.MainContainer{
+    max-width:95% ;
+    /* padding: 0px 30px; */
+    margin: auto;
+}
+
+/* Course_Details */
+.Nav-Fields {
+    overflow-x: auto; /* Enables horizontal scrolling */
+    scrollbar-width: none; /* For Firefox */
+    -ms-overflow-style: none; /* For Internet Explorer and Edge */
+}
+  
+.Nav-Fields::-webkit-scrollbar {
+    display: none; /* For Chrome, Safari, and newer Edge */
+}
+
+.Nav-Fields>div{
+    padding: 6px 22px;
+    margin: 0px 10px;
+}
+
+.SelectedFeildCourses{
+    overflow-x: auto; /* Enables horizontal scrolling */
+    scrollbar-width: none; /* For Firefox */
+    -ms-overflow-style: none; /* For Internet Explorer and Edge */
+}
+.SelectedFeildCourses::-webkit-scrollbar{
+    display: none; /* For Chrome, Safari, and newer Edge */
+}
+/* Review  */
+.review-card{
+    width: 270px;
+    height: 320px;
+    margin-right: 30px;
+}
+.selected-Feild{
+    font-size: 15px;
+    font-weight: bold;
+    margin-left: 10px;   
+}
+.review-Name{
+    font-size: 20px;
+    margin-left: 10px;   
+    font-weight: bold;
+}
+.review-Desc{
+    width: 90%;
+    margin: 0px auto;
+    font-size:18px;
+    font-weight :500;
+    color:#7B7B7B;
+}
+.review-Img{
+    width: 55px;
+}
+.wrapper {
+    background-color: white;
+    height: 120px;
+    overflow: hidden;
+    position: relative;
+    width: 80%;
+    display: flex;
+    align-items: center;
+  }
+  
+  /* Scrolling Track */
+  .track {
+    display: flex;
+    width: calc(200px * 14); /* Ensure it's wide enough for smooth looping */
+    animation: scroll 10s linear infinite;
+  }
+  
+  /* Individual Logo */
+  .logo {
+    width: 200px;
+    padding: 0 10px;
+  }
+  
+  .logo img {
+    width: 130px;
+    height: 90px;
+  }
+    @keyframes scroll {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(calc(-200px * 7)); 
+  }
+}
+
+
+

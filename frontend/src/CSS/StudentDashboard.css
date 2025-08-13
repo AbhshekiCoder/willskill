@@ -1,0 +1,23 @@
+tr{
+    border-collapse: collapse;
+   
+}
+td{
+    word-wrap: break-word; 
+    overflow-wrap: break-word;
+}
+th{
+    word-wrap: break-word; 
+    overflow-wrap: break-word;
+
+}
+@media(max-width: 640px){
+   table{
+    border-spacing: 20px;
+   }
+   td{
+    margin-left: 10px;
+    padding-left: 10px;
+   }
+   
+}

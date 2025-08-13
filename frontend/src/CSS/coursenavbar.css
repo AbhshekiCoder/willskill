@@ -1,0 +1,25 @@
+.input{
+    width: 1000px;
+}
+@media(max-width: 1250px){
+    .input{
+        width: 600px;
+    }
+}
+@media(max-width: 768px){
+    .input{
+        max-width: 300px;
+    }
+}
+@media(max-width: 469px){
+    .input{
+        max-width: 150px;
+    }
+
+}
+@media(max-width: 379px){
+    .input{
+        width: 100%;
+       
+    }
+}
